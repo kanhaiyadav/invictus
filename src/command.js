@@ -1,11 +1,20 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import { spawn } from "child_process";
+import path from "path";
+import { fileURLToPath } from "url";
 import {
     addPassword,
     deletePassword,
     logPasswords,
     updatePassword,
 } from "./db.js";
+
+
+// Get the absolute path of the current script
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 yargs(hideBin(process.argv))
     .command(
@@ -109,6 +118,23 @@ yargs(hideBin(process.argv))
             };
             updatePassword(data);
         }
-)
+    )
+    .command("web", "Start the Node.js server", {}, () => {
+        console.log("Starting the server... Press 'Ctrl + C' to stop it.");
+
+        const appPath = path.join(__dirname, "../app.js");
+        
+        // Start the server using `node server.js`
+        const serverProcess = spawn("node", [appPath], {
+            stdio: "inherit", // Allows server logs to appear in the CLI
+        });
+
+        // Handle process exit
+        serverProcess.on("close", (code) => {
+            console.log(`Server stopped with exit code ${code}`);
+        });
+    })
     .demandCommand(1)
+    .strictCommands()
+    .scriptName("invictus")
     .parse();
