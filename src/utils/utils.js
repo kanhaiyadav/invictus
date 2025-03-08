@@ -1,4 +1,5 @@
-import readline from "readline";
+import prompts from "prompts";
+import chalk from "chalk";
 
 export const formatDate = (date) => {
     const year = date.getFullYear();
@@ -7,16 +8,14 @@ export const formatDate = (date) => {
     return `${day}-${month}-${year}`;
 };
 
-export const askConfirmation = (question) => {
-    return new Promise((resolve) => {
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        });
-
-        rl.question(question, (answer) => {
-            rl.close();
-            resolve(answer.toLowerCase() === "yes" || answer.toLowerCase() === "y");
-        });
+export const askConfirmation = async (question) => {
+    const res = await prompts({
+        type: "toggle",
+        name: "value",
+        message: question,
+        initial: true,
+        active: "yes",
+        inactive: "no",
     });
+    return res.value;
 };

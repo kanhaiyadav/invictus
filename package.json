@@ -19,6 +19,7 @@
     "clipboardy": "^4.0.0",
     "express": "^4.21.2",
     "keytar": "^7.9.0",
+    "prompts": "^2.4.2",
     "yargs": "^17.7.2"
   }
 }

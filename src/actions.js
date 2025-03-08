@@ -2,9 +2,9 @@ import { readDb, writeDb } from "./db.js";
 import clipboardy from "clipboardy";
 import keytar from "keytar";
 import { formatDate, askConfirmation } from "./utils/utils.js";
+import chalk from "chalk";
 
 export const addPassword = async (data) => {
-    console.log(data);
     const db = await readDb();
     const orgIdx = db.orgs.findIndex(
         (item) => item.title === data.title || item.domain === data.domain
@@ -109,43 +109,36 @@ export const updatePassword = async (data) => {
 };
 
 export const copyPassword= async (service, account) => {
-    const confirm = await askConfirmation('Do you want to copy the password to clipboard? (yes/no): ');
+    const confirm = await askConfirmation('Do you want to copy the password to clipboard?')
     if (!confirm) {
-        console.log('Operation canceled.');
+        console.log(chalk.red('Operation canceled!'));
         return;
     }
 
     const password = await keytar.getPassword(service, account);
-    // if (password) {
-    //     await clipboardy.write(password);
-    //     console.log('Password copied to clipboard. It will be cleared in 10 seconds.');
-
-    //     setTimeout(() => {
-    //         clipboardy.write('');
-    //         console.log('Clipboard cleared for security.');
-    //     }, 10000);
-    // } else {
-    //     console.log('No password found.');
-    // }
-
-     if (password) {
+         if (password) {
          await clipboardy.write(password);
-         console.log(
-             "Password copied to clipboard. It will be cleared in 10 seconds."
-         );
+             console.log(chalk.greenBright(`Password copied to clipboard.`));
 
          let countdown = 10;
          const interval = setInterval(() => {
-             process.stdout.write(`\rClearing in: ${countdown} `); // Overwrites the same line
+             process.stdout.write(`\rClearing in: ${chalk.yellow(countdown)} `); // Overwrites the same line
              countdown--;
 
              if (countdown < 0) {
                  clearInterval(interval);
                  clipboardy.write("");
-                 console.log("\nClipboard cleared for security.");
+                 console.log(chalk.cyan("\nClipboard cleared for security."));
              }
          }, 1000);
      } else {
          console.log("No password found.");
      }
+}
+
+export const getOrgs = async () => {
+    const db = await readDb();
+    return db.orgs.map((org) => {
+     return org.title;
+    });
 }
