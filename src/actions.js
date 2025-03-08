@@ -78,7 +78,7 @@ export const deletePassword = async (data) => {
         (item) => item.email === data.email
     );
     if (accountIdx === -1) {
-        console.error("Account not found!!!");
+        console.error(chalk.red("Error: Account not found!!!"));
         return;
     }
     db.orgs[orgIdx].accounts.splice(accountIdx, 1);
@@ -109,7 +109,7 @@ export const updatePassword = async (data) => {
 };
 
 export const copyPassword= async (service, account) => {
-    const confirm = await askConfirmation('Do you want to copy the password to clipboard?')
+    const confirm = await askConfirmation('confirm you want to copy password to clipboard?')
     if (!confirm) {
         console.log(chalk.red('Operation canceled!'));
         return;
@@ -122,7 +122,7 @@ export const copyPassword= async (service, account) => {
 
          let countdown = 10;
          const interval = setInterval(() => {
-             process.stdout.write(`\rClearing in: ${chalk.yellow(countdown)} `); // Overwrites the same line
+             process.stdout.write(`\rClearing clipboard in: ${chalk.yellow(countdown)} `); // Overwrites the same line
              countdown--;
 
              if (countdown < 0) {
@@ -140,5 +140,16 @@ export const getOrgs = async () => {
     const db = await readDb();
     return db.orgs.map((org) => {
      return org.title;
+    });
+}
+
+export const getAccounts = async (orgTitle) => {
+    const db = await readDb();
+    const org = db.orgs.find((item) => item.title === orgTitle);
+    if (!org) {
+        return [];
+    }
+    return org.accounts.map((account) => {
+        return account.email;
     });
 }

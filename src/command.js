@@ -12,6 +12,7 @@ import {
     updatePassword,
     copyPassword,
     getOrgs,
+    getAccounts,
 } from "./actions.js";
 
 // Get the absolute path of the current script
@@ -36,8 +37,8 @@ yargs(hideBin(process.argv))
     .command(
         "add",
         "Add a new password",
-        (yargs) => {},
-        async (argv) => {
+        () => {},
+        async () => {
             const orgs = await getOrgs();
             const questions = [
                 {
@@ -66,7 +67,7 @@ yargs(hideBin(process.argv))
                 {
                     type: "text",
                     name: "domain",
-                    message: `What is the domain (${chalk.yellow('optional')})`,
+                    message: `What is the domain (${chalk.yellow("optional")})`,
                     initial: "none",
                 },
                 {
@@ -85,41 +86,84 @@ yargs(hideBin(process.argv))
         }
     )
     .command(
-        "delete <title> <email>",
+        "delete",
         "Delete a password",
-        (yargs) => {
-            yargs.positional("title", {
-                type: "string",
-                description: "The organisation title",
+        () => {},
+        async () => {
+            const orgs = await getOrgs();
+
+            const org = await prompts({
+                type: "autocomplete",
+                name: "title",
+                message: "Choose the organisation",
+                choices: orgs.map((org) => ({
+                    title: org,
+                    value: org,
+                })),
             });
-            yargs.positional("email", {
-                type: "string",
-                description: "The email",
+            if (!org.title) {
+                console.error(chalk.red("Organization not found!!!"));
+                return;
+            }
+            const accounts = await getAccounts(org.title);
+
+            const email = await prompts({
+                type: "autocomplete",
+                name: "email",
+                message: `Select your email/username`,
+                choices: accounts.map((account) => ({
+                    title: account,
+                    value: account,
+                })),
             });
-        },
-        (argv) => {
-            const data = {
-                title: argv.title,
-                email: argv.email,
-            };
-            deletePassword(data);
+
+            if (!email.email) {
+                console.error(chalk.red("Account not found!!!"));
+                return;
+            }
+            
+            deletePassword({ title: org.title, email: email.email });
         }
     )
     .command(
-        "copy <title> <email>",
+        "copy",
         "Copy a password to the clipboard",
-        (yargs) => {
-            yargs.positional("title", {
-                type: "string",
-                description: "The organisation title",
+        () => {},
+        async () => {
+
+            const orgs = await getOrgs();
+
+            const org = await prompts({
+                type: "autocomplete",
+                name: "title",
+                message: "Choose the organisation",
+                choices: orgs.map((org) => ({
+                    title: org,
+                    value: org,
+                })),
             });
-            yargs.positional("email", {
-                type: "string",
-                description: "The email",
+            if (!org.title) {
+                console.error(chalk.red("Organization not found!!!"));
+                return;
+            }
+            const accounts = await getAccounts(org.title);
+
+            const email = await prompts({
+                type: "autocomplete",
+                name: "email",
+                message: `Select your email/username`,
+                choices: accounts.map((account) => ({
+                    title: account,
+                    value: account,
+                })),
             });
-        },
-        (argv) => {
-            copyPassword(argv.title, argv.email);
+
+            if (!email.email) {
+                console.error(chalk.red("Account not found!!!"));
+                return;
+            }
+            
+            copyPassword(org.title, email.email );
         }
     )
     .command(
