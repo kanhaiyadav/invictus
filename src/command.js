@@ -21,17 +21,23 @@ const __dirname = path.dirname(__filename);
 
 yargs(hideBin(process.argv))
     .command(
-        "show [org]",
+        "show",
         "shows all the passwords of the specific organisation (if specified) else all the passwords of all organisations",
-        (yargs) => {
-            yargs.option("org", {
-                alias: "o",
-                type: "string",
-                description: "The organisation title",
+        () => {},
+        async () => {
+            const orgs = await getOrgs();
+            
+            const org = await prompts({
+                type: "autocomplete",
+                name: "title",
+                message: "Choose the organisation",
+                choices: orgs.map((org) => ({
+                    title: org,
+                    value: org,
+                })),
             });
-        },
-        (argv) => {
-            logPasswords(argv.org);
+            
+            logPasswords(org.title);
         }
     )
     .command(
@@ -79,6 +85,12 @@ yargs(hideBin(process.argv))
                     type: "password",
                     name: "password",
                     message: "and the password",
+                },
+                {
+                    type: "text",
+                    name: "description",
+                    message: `Any description (${chalk.yellow("optional")})`,
+                    initial: "none",
                 },
             ];
             const res = await prompts(questions);
@@ -167,29 +179,51 @@ yargs(hideBin(process.argv))
         }
     )
     .command(
-        "update <title> <email> <password>",
+        "update",
         "Update a password",
-        (yargs) => {
-            yargs.positional("title", {
-                type: "string",
-                description: "The organisation title",
+        () => {},
+        async () => {
+
+            const orgs = await getOrgs();
+
+            const org = await prompts({
+                type: "autocomplete",
+                name: "title",
+                message: "Choose the organisation",
+                choices: orgs.map((org) => ({
+                    title: org,
+                    value: org,
+                })),
             });
-            yargs.positional("email", {
-                type: "string",
-                description: "The email",
+            if (!org.title) {
+                console.error(chalk.red("Organization not found!!!"));
+                return;
+            }
+            const accounts = await getAccounts(org.title);
+
+            const email = await prompts({
+                type: "autocomplete",
+                name: "email",
+                message: `Select your email/username`,
+                choices: accounts.map((account) => ({
+                    title: account,
+                    value: account,
+                })),
             });
-            yargs.positional("password", {
-                type: "string",
-                description: "The password",
+
+            if (!email.email) {
+                console.error(chalk.red("Account not found!!!"));
+                return;
+            }
+
+            const password = await prompts({
+                type: "password",
+                name: "password",
+                message: "Enter the new password",
             });
-        },
-        (argv) => {
-            const data = {
-                title: argv.title,
-                email: argv.email,
-                password: argv.password,
-            };
-            updatePassword(data);
+
+            
+            updatePassword({ title: org.title, email: email.email, password: password.password });
         }
     )
     .command("web", "Start the Node.js server", {}, () => {

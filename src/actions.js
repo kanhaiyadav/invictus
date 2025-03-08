@@ -54,10 +54,6 @@ export const logPasswords = async (orgTitle) => {
             return;
         }
 
-        keytar.findCredentials(org.title).then((res) => {
-            console.log(res);
-        });
-
         console.table(org.accounts, ["email", "description", "createdAt"]);
     } else {
         db.orgs.forEach((org) => {
