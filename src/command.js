@@ -1,10 +1,10 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
 import prompts from "prompts";
 import chalk from "chalk";
+import { startServer } from "../app.js";
 import {
     addPassword,
     deletePassword,
@@ -26,7 +26,7 @@ yargs(hideBin(process.argv))
         () => {},
         async () => {
             const orgs = await getOrgs();
-            
+
             const org = await prompts({
                 type: "autocomplete",
                 name: "title",
@@ -228,18 +228,7 @@ yargs(hideBin(process.argv))
     )
     .command("web", "Start the Node.js server", {}, () => {
         console.log("Starting the server... Press 'Ctrl + C' to stop it.");
-
-        const appPath = path.join(__dirname, "../app.js");
-
-        // Start the server using `node server.js`
-        const serverProcess = spawn("node", [appPath], {
-            stdio: "inherit", // Allows server logs to appear in the CLI
-        });
-
-        // Handle process exit
-        serverProcess.on("close", (code) => {
-            console.log(`Server stopped with exit code ${code}`);
-        });
+        startServer();
     })
     .demandCommand(1)
     .strictCommands()

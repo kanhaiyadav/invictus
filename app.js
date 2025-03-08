@@ -1,34 +1,47 @@
-import http from "http";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import express from "express";
 import open from "open";
+import { readDb } from "./src/db.js";
+import cors from "cors";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const app = express();
+const port = 3000;
 
-// Define the port
-const PORT = 3000;
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://invictus-rouge.vercel.app", // ✅ Add your Vercel frontend domain
+];
 
-// Create the server
-const server = http.createServer((req, res) => {
-    // Set the content type
-    res.writeHead(200, { "Content-Type": "text/html" });
-
-    // Read and serve the HTML file
-    fs.readFile(path.join(__dirname, "index.html"), (err, data) => {
-        if (err) {
-            res.writeHead(500);
-            res.end("Error loading the page");
-        } else {
-            res.end(data);
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
         }
+        return callback(
+            new Error("CORS policy does not allow access from this origin."),
+            false
+        );
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.get("/", (req, res) => {
+    res.send("Hello World!");
+});
+
+app.get("/data", async (req, res) => {
+    const db = await readDb();
+    return res.status(200).json(db);
+});
+
+export const startServer = () => {
+    app.listen(port, () => {
+        console.log(`Server started at http://localhost:${port}`);
     });
-});
-
-// Start the server
-server.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-});
-
-await open(`http://localhost:${PORT}`);
+    open(`https://invictus-rouge.vercel.app`);
+};
