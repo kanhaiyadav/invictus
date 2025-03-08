@@ -8,7 +8,8 @@ import {
     deletePassword,
     logPasswords,
     updatePassword,
-} from "./db.js";
+    copyPassword,
+} from "./actions.js";
 
 
 // Get the absolute path of the current script
@@ -91,6 +92,23 @@ yargs(hideBin(process.argv))
                 email: argv.email,
             };
             deletePassword(data);
+        }
+)
+    .command(
+        "copy <title> <email>",
+        "Copy a password to the clipboard",
+        (yargs) => {
+            yargs.positional("title", {
+                type: "string",
+                description: "The organisation title",
+            });
+            yargs.positional("email", {
+                type: "string",
+                description: "The email",
+            });
+        },
+        (argv) => {
+            copyPassword(argv.title, argv.email);
         }
     )
     .command(

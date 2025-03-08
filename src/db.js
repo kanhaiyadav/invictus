@@ -2,130 +2,62 @@ import fs from "node:fs/promises";
 import { formatDate } from "./utils/utils.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import os from "os";
+import keytar from "keytar";
+
+const appName = "invictus";
+
+const DbPath = path.join(
+    os.homedir(),
+    process.platform === "win32"
+        ? `AppData\\Local\\${appName}\\metaData.json` // Windows
+        : process.platform === "darwin"
+        ? `Library/Application Support/${appName}/metaData.json` // macOS
+        : `.config/${appName}/metaData.json` // Linux
+);
 
 
-const DbPath = "../db.json";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const absolutePath = path.join(__dirname, DbPath);
 
+export const initDb = async () => {
+    try {
+        await writeDb({ orgs: [] });
+    } catch (error) {
+        console.error("Error initializing the database", error);
+    }
+};
+
 export const readDb = async () => {
     try {
-        const data = await fs.readFile(absolutePath, "utf-8");
-        return JSON.parse(data);
+        const data = await fs.readFile(DbPath, "utf-8");
+        const jsonData = JSON.parse(data);
+
+        if (!jsonData.orgs) {
+            await initDb(); // Initialize the database
+            return { orgs: [] };
+        }
+        return jsonData;
     } catch (error) {
+        if (error.code === "ENOENT") {
+            console.log("Database file not found. Creating a new one...");
+            await fs.mkdir(path.dirname(DbPath), { recursive: true }); // Ensure directory exists
+            const defaultData = { orgs: [] };
+            await fs.writeFile(DbPath, JSON.stringify(defaultData, null, 4)); // Create file with default data
+            return defaultData;
+        }
+
         console.error("Error reading the database", error);
         return [];
     }
 };
 
+
 export const writeDb = async (data) => {
     try {
-        await fs.writeFile(absolutePath, JSON.stringify(data, null, 4));
+        await fs.mkdir(path.dirname(DbPath), { recursive: true });
+        await fs.writeFile(DbPath, JSON.stringify(data, null, 4));
     } catch (error) {
         console.error("Error writing the database", error);
     }
 };
-
-export const addPassword = async (data) => {
-    console.log(data);
-    const db = await readDb();
-    const orgIdx = db.orgs.findIndex(
-        (item) => item.title === data.title || item.domain === data.domain
-    );
-    if (orgIdx !== -1) {
-        const org = db.orgs[orgIdx];
-        if (org.accounts.find((item) => item.email === data.email)) {
-            console.error("Account already exists!!!");
-            return;
-        }
-        db.orgs[orgIdx].accounts.push({
-            email: data.email,
-            password: data.password,
-            description: data.description,
-            createdAt: formatDate(new Date()),
-        });
-
-        writeDb(db);
-    } else {
-        db.orgs.push({
-            title: data.title,
-            domain: data.domain,
-            accounts: [
-                {
-                    email: data.email,
-                    password: data.password,
-                    description: data.description,
-                    createdAt: formatDate(new Date()),
-                },
-            ],
-        });
-
-        writeDb(db);
-    }
-};
-
-export const logPasswords = async (orgTitle) => {
-    const db = await readDb();
-    if (orgTitle) {
-        const org = db.orgs.find((item) => item.title === orgTitle);
-        if (!org) {
-            console.error("Organization not found!!!");
-            return;
-        }
-        console.table(org.accounts, [
-            "email",
-            "password",
-            "description",
-            "createdAt",
-        ]);
-    } else {
-        db.orgs.forEach((org) => {
-            console.log(`\n\n ${org.title} (${org.domain})`);
-            console.table(org.accounts, [
-                "email",
-                "password",
-                "description",
-                "createdAt",
-            ]);
-        });
-    }
-};
-
-export const deletePassword = async (data) => {
-    const db = await readDb();
-    const orgIdx = db.orgs.findIndex((item) => item.title === data.title);
-    if (orgIdx === -1) {
-        console.error("Organization not found!!!");
-        return;
-    }
-    const accountIdx = db.orgs[orgIdx].accounts.findIndex(
-        (item) => item.email === data.email
-    );
-    if (accountIdx === -1) {
-        console.error("Account not found!!!");
-        return;
-    }
-    db.orgs[orgIdx].accounts.splice(accountIdx, 1);
-    writeDb(db);
-};
-
-export const updatePassword = async (data) => {
-    const db = await readDb();
-    const orgIdx = db.orgs.findIndex((item) => item.title === data.title);
-    if (orgIdx === -1) {
-        console.error("Organization not found!!!");
-        return;
-    }
-    const accountIdx = db.orgs[orgIdx].accounts.findIndex(
-        (item) => item.email === data.email
-    );
-    if (accountIdx === -1) {
-        console.error("Account not found!!!");
-        return;
-    }
-    db.orgs[orgIdx].accounts[accountIdx] = {
-        ...db.orgs[orgIdx].accounts[accountIdx],
-        password: data.password,
-    };
-    writeDb(db);
-}
