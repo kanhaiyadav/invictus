@@ -2,13 +2,15 @@ import express from "express";
 import open from "open";
 import { readDb } from "./src/db.js";
 import cors from "cors";
+import chalk from "chalk";
 
 const app = express();
 const port = 3000;
 
 const allowedOrigins = [
     "http://localhost:5173",
-    "https://invictus-rouge.vercel.app", // ✅ Add your Vercel frontend domain
+    "https://invictus-rouge.vercel.app",
+    "https://invictus.kanhaiya.me",
 ];
 
 const corsOptions = {
@@ -41,7 +43,9 @@ app.get("/data", async (req, res) => {
 
 export const startServer = () => {
     app.listen(port, () => {
-        console.log(`Server started at http://localhost:${port}`);
+        console.log(`Server started at ${chalk.cyanBright.underline.bold(`http://localhost:${port}`)}`);
+        console.log(`Wesbsite started at ${chalk.cyanBright.underline.bold(allowedOrigins[2])}`);
+        console.log(chalk.italic.blue('Press Ctrl+C to quit.'));
     });
-    open(`https://invictus-rouge.vercel.app`);
+    open(`https://invictus.kanhaiya.me/`);
 };

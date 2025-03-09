@@ -227,7 +227,7 @@ yargs(hideBin(process.argv))
         }
     )
     .command("web", "Start the Node.js server", {}, () => {
-        console.log("Starting the server... Press 'Ctrl + C' to stop it.");
+        console.log("Starting the server...");
         startServer();
     })
     .demandCommand(1)
