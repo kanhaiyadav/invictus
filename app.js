@@ -12,6 +12,8 @@ import {
     updatePassword,
     deletePassword,
     deleteOrg,
+    markArchived,
+    markFavourite
 } from "./src/actions.js";
 dotenv.config();
 
@@ -116,6 +118,8 @@ app.post("/new-password", async (req, res) => {
     }
 });
 
+
+
 app.put("/update-password", async (req, res) => {
     const { org, email, password } = req.body;
     const responce = await updatePassword({ title: org, email, password });
@@ -149,6 +153,36 @@ app.delete("/delete-password", async (req, res) => {
 app.delete("/delete-org", async (req, res) => {
     const { title } = req.body;
     const responce = await deleteOrg(title);
+    if (responce.err) {
+        return res.status(responce.code).json(responce);
+    }
+    else {
+        const dbWithPass = await organizationWithPass(responce.data);
+        return res.status(200).json({
+            message: responce.message,
+            data: dbWithPass,
+        });
+    }
+});
+
+app.patch("/archive", async (req, res) => {
+    const { org } = req.body;
+    const responce = await markArchived(org);
+    if (responce.err) {
+        return res.status(responce.code).json(responce);
+    }
+    else {
+        const dbWithPass = await organizationWithPass(responce.data);
+        return res.status(200).json({
+            message: responce.message,
+            data: dbWithPass,
+        });
+    }
+});
+
+app.patch("/favourite", async (req, res) => {
+    const { org } = req.body;
+    const responce = await markFavourite(org);
     if (responce.err) {
         return res.status(responce.code).json(responce);
     }

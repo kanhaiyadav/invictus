@@ -38,6 +38,8 @@ export const addPassword = async (data) => {
         db.orgs.push({
             title: data.title,
             domain: data.domain,
+            favourite: false,
+            archived: false,
             accounts: [
                 {
                     email: data.email,
@@ -220,6 +222,8 @@ export const createOrg = async (data) => {
     db.orgs.push({
         title: data.title,
         domain: data.domain,
+        favourite: false,
+        archived: false,
         accounts: [],
     });
 
@@ -258,6 +262,50 @@ export const deleteOrg = async (orgTitle) => {
     return {
         err: false,
         message: "Organization deleted fully",
+        data: db,
+    };
+};
+
+export const markFavourite = async (orgTitle) => {
+    const db = await readDb();
+    const orgIdx = db.orgs.findIndex((item) => item.title === orgTitle);
+    if (orgIdx === -1) {
+        console.error(chalk.red("Organization not found!!!"));
+        return {
+            err: true,
+            message: "Organization not found!!!",
+            code: 404,
+        };
+    }
+    db.orgs[orgIdx].favourite = !db.orgs[orgIdx].favourite;
+
+    writeDb(db);
+
+    return {
+        err: false,
+        message: "Organization marked as favourite",
+        data: db,
+    };
+};
+
+export const markArchived = async (orgTitle) => {
+    const db = await readDb();
+    const orgIdx = db.orgs.findIndex((item) => item.title === orgTitle);
+    if (orgIdx === -1) {
+        console.error(chalk.red("Organization not found!!!"));
+        return {
+            err: true,
+            message: "Organization not found!!!",
+            code: 404,
+        };
+    }
+    db.orgs[orgIdx].archived = !db.orgs[orgIdx].archived;
+
+    writeDb(db);
+
+    return {
+        err: false,
+        message: "Organization marked as archived",
         data: db,
     };
 };

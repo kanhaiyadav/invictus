@@ -14,6 +14,11 @@ import {
     getOrgs,
     getAccounts,
 } from "./actions.js";
+import {
+    askConfirmation,
+    copyToClipboard,
+    generatePassword,
+} from "./utils/utils.js";
 
 // Get the absolute path of the current script
 const __filename = fileURLToPath(import.meta.url);
@@ -36,7 +41,7 @@ yargs(hideBin(process.argv))
                     value: org,
                 })),
             });
-            
+
             logPasswords(org.title);
         }
     )
@@ -133,7 +138,7 @@ yargs(hideBin(process.argv))
                 console.error(chalk.red("Account not found!!!"));
                 return;
             }
-            
+
             deletePassword({ title: org.title, email: email.email });
         }
     )
@@ -142,7 +147,6 @@ yargs(hideBin(process.argv))
         "Copy a password to the clipboard",
         () => {},
         async () => {
-
             const orgs = await getOrgs();
 
             const org = await prompts({
@@ -174,8 +178,8 @@ yargs(hideBin(process.argv))
                 console.error(chalk.red("Account not found!!!"));
                 return;
             }
-            
-            copyPassword(org.title, email.email );
+
+            copyPassword(org.title, email.email);
         }
     )
     .command(
@@ -183,7 +187,6 @@ yargs(hideBin(process.argv))
         "Update a password",
         () => {},
         async () => {
-
             const orgs = await getOrgs();
 
             const org = await prompts({
@@ -222,14 +225,53 @@ yargs(hideBin(process.argv))
                 message: "Enter the new password",
             });
 
-            
-            updatePassword({ title: org.title, email: email.email, password: password.password });
+            updatePassword({
+                title: org.title,
+                email: email.email,
+                password: password.password,
+            });
         }
     )
     .command("web", "Start the Node.js server", {}, () => {
         console.log("Starting the server...");
         startServer();
     })
+    .command(
+        "generate",
+        "Generate a new password",
+        (yargs) => {
+            yargs.option("length", {
+                alias: "l",
+                description: "Length of the password",
+                type: "number",
+                default: 16,
+            });
+            yargs.option("save", {
+                alias: "s",
+                description: "Save the password to the clipboard",
+                type: "boolean",
+                default: false,
+            });
+        },
+        async (argv) => {
+            const password = generatePassword(argv.length);
+            console.log(`Generated password: ${chalk.cyan.bold(password)}`);
+            if (argv.save) {
+                await copyToClipboard(password);
+                console.log(
+                    chalk.greenBright("Copied to clipboard successfully!")
+                );
+            } else {
+                const confirm = await askConfirmation("Copy to clipboard")
+                if (confirm) {
+                    await copyToClipboard(password);
+                    console.log(
+                        chalk.greenBright("Copied to clipboard successfully!")
+                    );
+                }
+            }
+        }
+    )
     .demandCommand(1)
     .strictCommands()
     .scriptName("invictus")
