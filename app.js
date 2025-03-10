@@ -11,6 +11,7 @@ import {
     addPassword,
     updatePassword,
     deletePassword,
+    deleteOrg,
 } from "./src/actions.js";
 dotenv.config();
 
@@ -82,35 +83,82 @@ app.get("/data", async (req, res) => {
 
 app.post("/new-org", async (req, res) => {
     const { title, domain } = req.body;
-    const newDb = await createOrg({ title, domain });
-    const dbWithPass = await organizationWithPass(newDb);
-    return res.status(201).json(dbWithPass);
+    const responce = await createOrg({ title, domain });
+    if (responce.err) {
+        return res.status(responce.code).json(responce);
+    }
+    else {
+        const dbWithPass = await organizationWithPass(responce.data);
+        return res.status(201).json({
+            message: responce.message,
+            data: dbWithPass,
+        });
+    }
 });
 
 app.post("/new-password", async (req, res) => {
     const { org, email, password, description } = req.body;
-    const newDb = await addPassword({
+    const responce = await addPassword({
         title: org,
         email,
         password,
         description,
     });
-    const dbWithPass = await organizationWithPass(newDb);
-    return res.status(201).json(dbWithPass);
+    if (responce.err) {
+        return res.status(responce.code).json(responce);
+    }
+    else {
+        const dbWithPass = await organizationWithPass(responce.data);
+        return res.status(201).json({
+            message: responce.message,
+            data: dbWithPass,
+        });
+    }
 });
 
 app.put("/update-password", async (req, res) => {
     const { org, email, password } = req.body;
-    const newDb = await updatePassword({ title: org, email, password });
-    const dbWithPass = await organizationWithPass(newDb);
-    return res.status(200).json(dbWithPass);
+    const responce = await updatePassword({ title: org, email, password });
+    if (responce.err) {
+        return res.status(responce.code).json(responce);
+    }
+    else {
+        const dbWithPass = await organizationWithPass(responce.data);
+        return res.status(200).json({
+            message: responce.message,
+            data: dbWithPass,
+        });
+    }
 });
 
 app.delete("/delete-password", async (req, res) => {
     const { org, email } = req.body;
-    const newDb = await deletePassword({ title: org, email });
-    const dbWithPass = await organizationWithPass(newDb);
-    return res.status(200).json(dbWithPass);
+    const responce = await deletePassword({ title: org, email });
+    if (responce.err) {
+        return res.status(responce.code).json(responce);
+    }
+    else {
+        const dbWithPass = await organizationWithPass(responce.data);
+        return res.status(200).json({
+            message: responce.message,
+            data: dbWithPass,
+        });
+    }
+});
+
+app.delete("/delete-org", async (req, res) => {
+    const { title } = req.body;
+    const responce = await deleteOrg(title);
+    if (responce.err) {
+        return res.status(responce.code).json(responce);
+    }
+    else {
+        const dbWithPass = await organizationWithPass(responce.data);
+        return res.status(200).json({
+            message: responce.message,
+            data: dbWithPass,
+        });
+    }
 });
 
 export const startServer = () => {
