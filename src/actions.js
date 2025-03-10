@@ -17,7 +17,6 @@ export const addPassword = async (data) => {
         }
         db.orgs[orgIdx].accounts.push({
             email: data.email,
-            // password: data.password,
             description: data.description,
             createdAt: formatDate(new Date()),
         });
@@ -25,6 +24,9 @@ export const addPassword = async (data) => {
         keytar.setPassword(data.title, data.email, data.password);
 
         writeDb(db);
+
+        return db;
+        
     } else {
         db.orgs.push({
             title: data.title,
@@ -42,6 +44,8 @@ export const addPassword = async (data) => {
         keytar.setPassword(data.title, data.email, data.password);
 
         writeDb(db);
+
+        return db;
     }
 };
 
@@ -82,6 +86,8 @@ export const deletePassword = async (data) => {
     keytar.deletePassword(data.title, data.email);
 
     writeDb(db);
+
+    return db;
 };
 
 export const updatePassword = async (data) => {
@@ -102,6 +108,8 @@ export const updatePassword = async (data) => {
     keytar.setPassword(data.title, data.email, data.password);
 
     writeDb(db);
+
+    return db;
 };
 
 export const copyPassword= async (service, account) => {
@@ -158,3 +166,21 @@ export const getPassword = async (service, account) => {
        return "404 not found";
     }
 }
+
+export const createOrg = async (data) => {
+    const db = await readDb();
+    const orgIdx = db.orgs.findIndex((item) => item.title === data.title);
+    if (orgIdx !== -1) {
+        console.error("Organization already exists!!!");
+        return;
+    }
+    db.orgs.push({
+        title: data.title,
+        domain: data.domain,
+        accounts: [],
+    });
+
+    writeDb(db);
+
+    return db;
+};
