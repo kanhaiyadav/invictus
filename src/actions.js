@@ -149,3 +149,12 @@ export const getAccounts = async (orgTitle) => {
         return account.email;
     });
 }
+
+export const getPassword = async (service, account) => {
+    const password = await keytar.getPassword(service, account);
+    if (password) {
+        return password;
+    } else {
+       return "404 not found";
+    }
+}

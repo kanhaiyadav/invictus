@@ -3,6 +3,10 @@ import open from "open";
 import { readDb } from "./src/db.js";
 import cors from "cors";
 import chalk from "chalk";
+import CryptoJS from "crypto-js";
+import dotenv from "dotenv";
+import { getPassword } from "./src/actions.js";
+dotenv.config();
 
 const app = express();
 const port = 3000;
@@ -38,8 +42,32 @@ app.get("/", (req, res) => {
 
 app.get("/data", async (req, res) => {
     const db = await readDb();
-    return res.status(200).json(db);
+    const orgsWithPass = await Promise.all(
+        db.orgs.map(async (org) => {
+            org.accounts = await Promise.all(
+                org.accounts.map(async (account) => {
+                    const password = await getPassword(
+                        org.title,
+                        account.email
+                    );
+                    const encryptedPassword = CryptoJS.AES.encrypt(
+                        password,
+                        process.env.SECRET_KEY
+                    ).toString();
+
+                    return {
+                        ...account,
+                        password: encryptedPassword,
+                    };
+                })
+            );
+            return org;
+        })
+    );
+
+    return res.status(200).json({ orgs: orgsWithPass });
 });
+
 
 export const startServer = () => {
     app.listen(port, () => {
