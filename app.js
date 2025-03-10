@@ -166,8 +166,8 @@ app.delete("/delete-org", async (req, res) => {
 });
 
 app.patch("/archive", async (req, res) => {
-    const { org } = req.body;
-    const responce = await markArchived(org);
+    const { title } = req.body;
+    const responce = await markArchived(title);
     if (responce.err) {
         return res.status(responce.code).json(responce);
     }
@@ -181,8 +181,8 @@ app.patch("/archive", async (req, res) => {
 });
 
 app.patch("/favourite", async (req, res) => {
-    const { org } = req.body;
-    const responce = await markFavourite(org);
+    const { title } = req.body;
+    const responce = await markFavourite(title);
     if (responce.err) {
         return res.status(responce.code).json(responce);
     }

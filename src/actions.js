@@ -283,7 +283,7 @@ export const markFavourite = async (orgTitle) => {
 
     return {
         err: false,
-        message: "Organization marked as favourite",
+        message: db.orgs[orgIdx].favourite? "Organization added to favourites": "Organization removed from favourites",
         data: db,
     };
 };
@@ -305,7 +305,9 @@ export const markArchived = async (orgTitle) => {
 
     return {
         err: false,
-        message: "Organization marked as archived",
+        message: db.orgs[orgIdx].archived
+            ? "Organization archived"
+            : "Organization unarchived",
         data: db,
     };
 };
