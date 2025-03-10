@@ -1,5 +1,5 @@
 {
-  "name": "nodejs",
+  "name": "invictus",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -9,8 +9,8 @@
   "bin": {
     "invictus": "./index.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["cli", "invictus", "password-generator", "password-manager", "password-manager-cli"],
+  "author": "Kanhaiya Yadav",
   "license": "ISC",
   "type": "module",
   "description": "",
