@@ -1,6 +1,6 @@
 {
   "name": "invictus",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,7 +9,13 @@
   "bin": {
     "invictus": "./index.js"
   },
-  "keywords": ["cli", "invictus", "password-generator", "password-manager", "password-manager-cli"],
+  "keywords": [
+    "cli",
+    "invictus",
+    "password-generator",
+    "password-manager",
+    "password-manager-cli"
+  ],
   "author": "Kanhaiya Yadav",
   "license": "ISC",
   "type": "module",
