@@ -1,35 +1,43 @@
 {
-  "name": "invictus",
-  "version": "1.0.1",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js"
-  },
-  "bin": {
-    "invictus": "./index.js"
-  },
-  "keywords": [
-    "cli",
-    "invictus",
-    "password-generator",
-    "password-manager",
-    "password-manager-cli"
-  ],
-  "author": "Kanhaiya Yadav",
-  "license": "ISC",
-  "type": "module",
-  "description": "",
-  "dependencies": {
-    "chalk": "^5.4.1",
-    "clipboardy": "^4.0.0",
-    "cors": "^2.8.5",
-    "crypto-js": "^4.2.0",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "keytar": "^7.9.0",
-    "open": "^10.1.0",
-    "prompts": "^2.4.2",
-    "yargs": "^17.7.2"
-  }
+    "name": "invictus",
+    "version": "1.0.1",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node app.js"
+    },
+    "bin": {
+        "invictus": "./index.js"
+    },
+    "keywords": [
+        "cli",
+        "invictus",
+        "password-generator",
+        "password-manager",
+        "password-manager-cli"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kanhaiyadav/invictus.git"
+    },
+    "homepage": "https://github.com/kanhaiyadav/invictus#readme",
+    "bugs": {
+        "url": "https://github.com/kanhaiyadav/invictus/issues"
+    },
+    "author": "Kanhaiya Yadav",
+    "license": "ISC",
+    "type": "module",
+    "description": "A cli based password manager application, also has a web interface for doing things",
+    "dependencies": {
+        "chalk": "^5.4.1",
+        "clipboardy": "^4.0.0",
+        "cors": "^2.8.5",
+        "crypto-js": "^4.2.0",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "keytar": "^7.9.0",
+        "open": "^10.1.0",
+        "prompts": "^2.4.2",
+        "yargs": "^17.7.2"
+    }
 }
