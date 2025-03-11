@@ -4,6 +4,20 @@ import keytar from "keytar";
 import { formatDate, askConfirmation } from "./utils/utils.js";
 import chalk from "chalk";
 
+export const isOrgExists = async (orgTitle) => {
+    const db = await readDb();
+    return db.orgs.some((org) => org.title === orgTitle.toLowerCase());
+};
+
+export const isAccountExists = async (orgTitle, account) => {
+    const db = await readDb();
+    const org = db.orgs.find((item) => item.title === orgTitle);
+    if (!org) {
+        return false;
+    }
+    return org.accounts.some((acc) => acc.email === account);
+};
+
 export const addPassword = async (data) => {
     const db = await readDb();
     const orgIdx = db.orgs.findIndex(
@@ -119,7 +133,7 @@ export const updatePassword = async (data) => {
     const db = await readDb();
     const orgIdx = db.orgs.findIndex((item) => item.title === data.title);
     if (orgIdx === -1) {
-        console.error("Organization not found!!!");
+        console.log(chalk.red("Organization not found!!!"));
         return {
             err: true,
             message: "Organization not found!!!",
@@ -130,7 +144,7 @@ export const updatePassword = async (data) => {
         (item) => item.email === data.email
     );
     if (accountIdx === -1) {
-        console.error("Account not found!!!");
+        console.log(chalk.red("Account not found!!!"));
         return {
             err: true,
             message: "Account not found!!!",
@@ -150,6 +164,17 @@ export const updatePassword = async (data) => {
 };
 
 export const copyPassword = async (service, account) => {
+
+    if (! await isOrgExists(service)) {
+        console.error(chalk.red("Organization not found!!!"));
+        return;
+    } else {
+        if(! await isAccountExists(service, account)) {
+            console.error(chalk.red("Account not found!!!"));
+            return;
+        }
+    }
+    
     const confirm = await askConfirmation(
         "confirm you want to copy password to clipboard?"
     );
@@ -177,7 +202,7 @@ export const copyPassword = async (service, account) => {
             }
         }, 1000);
     } else {
-        console.log("No password found.");
+        console.log(chalk.red("No password found!"));
     }
 };
 

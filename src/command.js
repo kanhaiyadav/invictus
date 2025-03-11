@@ -13,6 +13,8 @@ import {
     copyPassword,
     getOrgs,
     getAccounts,
+    isOrgExists,
+    isAccountExists
 } from "./actions.js";
 import {
     askConfirmation,
@@ -26,33 +28,57 @@ const __dirname = path.dirname(__filename);
 
 yargs(hideBin(process.argv))
     .command(
-        "show",
-        "shows all the passwords of the specific organisation (if specified) else all the passwords of all organisations",
-        () => {},
-        async () => {
-            const orgs = await getOrgs();
-
-            const org = await prompts({
-                type: "autocomplete",
-                name: "title",
-                message: "Choose the organisation",
-                choices: orgs.map((org) => ({
-                    title: org,
-                    value: org,
-                })),
+        "show [title]",
+        "shows all the account's metadata of the specific organisation (if specified) else all the passwords of all organisations",
+        (yargs) => {
+            yargs.positional("title", {
+                type: "string",
+                describe: "The title of the organisation/website",
             });
+        },
+        async (argv) => {
+            if (!argv.title) {
+                const orgs = await getOrgs();
 
-            logPasswords(org.title);
+                const org = await prompts({
+                    type: "autocomplete",
+                    name: "title",
+                    message: "Choose the organisation",
+                    choices: orgs.map((org) => ({
+                        title: org,
+                        value: org,
+                    })),
+                });
+
+                logPasswords(org.title);
+            } else {
+                logPasswords(argv.title);
+            }
         }
     )
     .command(
-        "add",
+        "add [title] [email] [des]",
         "Add a new password",
-        () => {},
-        async () => {
+        (yargs) => {
+            yargs.positional("title", {
+                type: "string",
+                describe: "The title of the organisation/website",
+            });
+            yargs.positional("email", {
+                type: "string",
+                describe: "your new account's email/username",
+            });
+            yargs.positional("des", {
+                type: "string",
+                description: "optional description of the account",
+            });
+        },
+        async (argv) => {
             const orgs = await getOrgs();
-            const questions = [
-                {
+            const questions = [];
+
+            if (!argv.title) {
+                questions.push({
                     type: "autocomplete",
                     name: "title",
                     message: "What is the name of the organisation",
@@ -74,148 +100,205 @@ yargs(hideBin(process.argv))
                             }, // Allow custom value
                         ];
                     },
-                },
-                {
-                    type: "text",
-                    name: "domain",
-                    message: `What is the domain (${chalk.yellow("optional")})`,
-                    initial: "none",
-                },
-                {
+                });
+            }
+
+            if (!argv.domain) {
+                if (!(await isOrgExists(argv.title))) {
+                    questions.push({
+                        type: "text",
+                        name: "domain",
+                        message: `What is the domain (${chalk.yellow(
+                            "optional"
+                        )})`,
+                        initial: "none",
+                    });
+                }
+            }
+
+            if (!argv.email) {
+                questions.push({
                     type: "text",
                     name: "email",
                     message: `What is your email/username`,
-                },
-                {
-                    type: "password",
-                    name: "password",
-                    message: "and the password",
-                },
-                {
+                });
+            }
+
+            questions.push({
+                type: "password",
+                name: "password",
+                message: "Enter your the password",
+            });
+
+            if (!argv.des) {
+                questions.push({
                     type: "text",
                     name: "description",
                     message: `Any description (${chalk.yellow("optional")})`,
                     initial: "none",
-                },
-            ];
+                });
+            }
             const res = await prompts(questions);
-            addPassword(res);
+
+            addPassword({
+                title: argv.title || res.title,
+                domain: argv.domain || res.domain,
+                email: argv.email || res.email,
+                password: argv.password || res.password,
+                description: argv.des || res.description,
+            });
         }
     )
     .command(
-        "delete",
+        "delete [title] [email]",
         "Delete a password",
-        () => {},
-        async () => {
+        (yargs) => {
+            yargs.positional("title", {
+                type: "string",
+                describe: "The title of the organisation/website",
+            });
+            yargs.positional("email", {
+                type: "string",
+                describe: "your account's email/username",
+            });
+        },
+        async (argv) => {
             const orgs = await getOrgs();
-
-            const org = await prompts({
-                type: "autocomplete",
-                name: "title",
-                message: "Choose the organisation",
-                choices: orgs.map((org) => ({
-                    title: org,
-                    value: org,
-                })),
-            });
-            if (!org.title) {
-                console.error(chalk.red("Organization not found!!!"));
-                return;
-            }
-            const accounts = await getAccounts(org.title);
-
-            const email = await prompts({
-                type: "autocomplete",
-                name: "email",
-                message: `Select your email/username`,
-                choices: accounts.map((account) => ({
-                    title: account,
-                    value: account,
-                })),
-            });
-
-            if (!email.email) {
-                console.error(chalk.red("Account not found!!!"));
-                return;
+            const questions = [];
+            if (!argv.title) {
+                questions.push({
+                    type: "autocomplete",
+                    name: "title",
+                    message: "Choose the organisation",
+                    choices: orgs.map((org) => ({
+                        title: org,
+                        value: org,
+                    })),
+                });
             }
 
-            deletePassword({ title: org.title, email: email.email });
+            if (!argv.email) {
+                // const accounts = await getAccounts(org.title);
+                questions.push({
+                    type: "autocomplete",
+                    name: "email",
+                    message: `Select your email/username`,
+                    choices: async (prev, values) => {
+                        const accounts = await getAccounts(prev || argv.title);
+                        return accounts.map((account) => ({
+                            title: account,
+                            value: account,
+                        }));
+                    }
+                });
+            }
+
+            const res = await prompts(questions);
+            deletePassword({ title: res.title || argv.title, email: res.email || argv.email });
         }
     )
     .command(
-        "copy",
+        "copy [title] [email]",
         "Copy a password to the clipboard",
-        () => {},
-        async () => {
+        (yargs) => {
+            yargs.positional("title", {
+                type: "string",
+                describe: "The title of the organisation/website",
+            });
+            yargs.positional("email", {
+                type: "string",
+                describe: "your account's email/username",
+            });
+        },
+        async (argv) => {
             const orgs = await getOrgs();
-
-            const org = await prompts({
-                type: "autocomplete",
-                name: "title",
-                message: "Choose the organisation",
-                choices: orgs.map((org) => ({
-                    title: org,
-                    value: org,
-                })),
-            });
-            if (!org.title) {
-                console.error(chalk.red("Organization not found!!!"));
-                return;
-            }
-            const accounts = await getAccounts(org.title);
-
-            const email = await prompts({
-                type: "autocomplete",
-                name: "email",
-                message: `Select your email/username`,
-                choices: accounts.map((account) => ({
-                    title: account,
-                    value: account,
-                })),
-            });
-
-            if (!email.email) {
-                console.error(chalk.red("Account not found!!!"));
-                return;
+            const questions = [];
+            if (!argv.title) {
+                questions.push({
+                    type: "autocomplete",
+                    name: "title",
+                    message: "Choose the organisation",
+                    choices: orgs.map((org) => ({
+                        title: org,
+                        value: org,
+                    })),
+                });
             }
 
-            copyPassword(org.title, email.email);
+            if (!argv.email) {
+                // const accounts = await getAccounts(org.title);
+                questions.push({
+                    type: "autocomplete",
+                    name: "email",
+                    message: `Select your email/username`,
+                    choices: async (prev, values) => {
+                        const accounts = await getAccounts(prev || argv.title);
+                        return accounts.map((account) => ({
+                            title: account,
+                            value: account,
+                        }));
+                    },
+                });
+            }
+
+            const res = await prompts(questions);
+
+            copyPassword(res.title || argv.title, res.email || argv.email);
         }
     )
     .command(
-        "update",
+        "update [title] [email]",
         "Update a password",
-        () => {},
-        async () => {
-            const orgs = await getOrgs();
-
-            const org = await prompts({
-                type: "autocomplete",
-                name: "title",
-                message: "Choose the organisation",
-                choices: orgs.map((org) => ({
-                    title: org,
-                    value: org,
-                })),
+        (yargs) => {
+            yargs.positional("title", {
+                type: "string",
+                describe: "The title of the organisation/website",
             });
-            if (!org.title) {
-                console.error(chalk.red("Organization not found!!!"));
+            yargs.positional("email", {
+                type: "string",
+                describe: "your account's email/username",
+            });
+        },
+        async (argv) => {
+            const orgs = await getOrgs();
+            const questions = [];
+            if (!argv.title) {
+                questions.push({
+                    type: "autocomplete",
+                    name: "title",
+                    message: "Choose the organisation",
+                    choices: orgs.map((org) => ({
+                        title: org,
+                        value: org,
+                    })),
+                });
+            }
+
+            if (!argv.email) {
+                // const accounts = await getAccounts(org.title);
+                questions.push({
+                    type: "autocomplete",
+                    name: "email",
+                    message: `Select your email/username`,
+                    choices: async (prev, values) => {
+                        const accounts = await getAccounts(prev || argv.title);
+                        return accounts.map((account) => ({
+                            title: account,
+                            value: account,
+                        }));
+                    },
+                });
+            }
+
+            const res = await prompts(questions);
+
+            if (!await isOrgExists(res.title || argv.title)) {
+                console.log(chalk.redBright("Organisation not found!"));
                 return;
             }
-            const accounts = await getAccounts(org.title);
 
-            const email = await prompts({
-                type: "autocomplete",
-                name: "email",
-                message: `Select your email/username`,
-                choices: accounts.map((account) => ({
-                    title: account,
-                    value: account,
-                })),
-            });
-
-            if (!email.email) {
-                console.error(chalk.red("Account not found!!!"));
+            if(!await isAccountExists(res.title || argv.title, res.email || argv.email)) {
+                console.log(chalk.redBright("Account not found!"));
                 return;
             }
 
@@ -224,10 +307,10 @@ yargs(hideBin(process.argv))
                 name: "password",
                 message: "Enter the new password",
             });
-
+            
             updatePassword({
-                title: org.title,
-                email: email.email,
+                title: res.title || argv.title,
+                email: res.email || argv.email,
                 password: password.password,
             });
         }
@@ -262,7 +345,7 @@ yargs(hideBin(process.argv))
                     chalk.greenBright("Copied to clipboard successfully!")
                 );
             } else {
-                const confirm = await askConfirmation("Copy to clipboard")
+                const confirm = await askConfirmation("Copy to clipboard");
                 if (confirm) {
                     await copyToClipboard(password);
                     console.log(
