@@ -135,7 +135,7 @@ export const updatePassword = async (data) => {
     if (orgIdx === -1) {
         console.log(chalk.red("Organization not found!!!"));
         return {
-            err: true,
+            err: true,  
             message: "Organization not found!!!",
             code: 404,
         };
@@ -336,3 +336,67 @@ export const markArchived = async (orgTitle) => {
         data: db,
     };
 };
+
+export const getFavourites = async () => {
+    const db = await readDb();
+    return db.orgs.filter((org) => org.favourite);
+};
+
+export const getArchived = async () => {
+    const db = await readDb();
+    return db.orgs.filter((org) => org.archived);
+};
+
+export const logOrgs = async (isFav, isArchived) => {
+    const db = await readDb();
+    if (isFav) {
+        if(isArchived) {
+            const favArchivedOrgs = db.orgs.filter((org) => org.favourite && org.archived);
+            if (favArchivedOrgs.length === 0) {
+                console.log(`\nFavourite and Archived Organizations: \n${chalk.yellow('No data exist!!!')}\n`);
+            } else {
+                console.log("\nFavourite and Archived Organizations:");
+                console.table(favArchivedOrgs, [
+                    "title",
+                    "domain",
+                    "favourite",
+                    "archived",
+                ]);
+            }
+        }
+        else {
+            const favOrgs = db.orgs.filter((org) => org.favourite);
+            if (favOrgs.length === 0) {
+                console.log(`\nFavourite Organizations: \n${chalk.yellow('No data exist!!!')}\n`);
+            } else {
+                console.log("\nFavourite Organizations:");
+                console.table(favOrgs, [
+                    "title",
+                    "domain",
+                    "favourite",
+                    "archived",
+                ]);
+            }
+        }
+    } else if (isArchived) {
+        const archivedOrgs = db.orgs.filter((org) => org.archived);
+        if (archivedOrgs.length === 0) {
+            console.log(`\nArchived Organizations: \n${chalk.yellow('No data exist!!!')}\n`);
+        } else {
+            console.log("\nArchived Organizations:");
+            console.table(archivedOrgs, [
+                "title",
+                "domain",
+                "favourite",
+                "archived",
+            ]);
+        }
+    } else {
+        if (db.orgs.length === 0) {
+            console.log(`\n\nAll Organizations: \n${chalk.yellow('No data exist!!!')}\n`);
+        } else {
+            console.log("\n\nAll Organizations:");
+            console.table(db.orgs, ["title", "domain", "favourite", "archived"]);
+        }
+    }
+}

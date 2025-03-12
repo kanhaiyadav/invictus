@@ -1,6 +1,5 @@
 import prompts from "prompts";
 import chalk from "chalk";
-import CryptoJS from "crypto-js";
 import clipboardy from "clipboardy";
 
 export const formatDate = (date) => {
@@ -24,15 +23,6 @@ export const askConfirmation = async (question) => {
         inactive: "no",
     });
     return res.value;
-};
-
-export const encryptPassword = (password) => {
-    return CryptoJS.AES.encrypt(password, process.env.SECRET_KEY).toString();
-};
-
-export const decryptPassword = (encryptedPassword) => {
-    const bytes = CryptoJS.AES.decrypt(encryptedPassword, process.env.SECRET_KEY);
-    return bytes.toString(CryptoJS.enc.Utf8);
 };
 
 export const generatePassword = (length) => {

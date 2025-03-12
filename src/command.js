@@ -14,13 +14,19 @@ import {
     getOrgs,
     getAccounts,
     isOrgExists,
-    isAccountExists
+    isAccountExists,
+    markFavourite,
+    markArchived,
+    getArchived,
+    getFavourites,
+    logOrgs,
 } from "./actions.js";
 import {
     askConfirmation,
     copyToClipboard,
     generatePassword,
 } from "./utils/utils.js";
+import { readDb } from "./db.js";
 
 // Get the absolute path of the current script
 const __filename = fileURLToPath(import.meta.url);
@@ -35,8 +41,39 @@ yargs(hideBin(process.argv))
                 type: "string",
                 describe: "The title of the organisation/website",
             });
+            yargs.options("orgs", {
+                alias: "o",
+                type: "boolean",
+                description: "Show only organisations",
+                default: false,
+            });
+            yargs.options("fav", {
+                alias: "f",
+                type: "boolean",
+                description: "Show only favourite organisations",
+                default: false,
+            });
+            yargs.options("archived", {
+                alias: "a",
+                type: "boolean",
+                description: "Show only archived organisations",
+                default: false,
+            });
+            yargs.check((argv) => {
+                if ((argv.fav || argv.archived) && !argv.orgs) {
+                    throw new Error(
+                        "--fav and --arch require --orgs to be used first"
+                    );
+                }
+                return true;
+            });
         },
         async (argv) => {
+            if (argv.orgs) {
+                await logOrgs(argv.fav, argv.archived);
+                return;
+            }
+
             if (!argv.title) {
                 const orgs = await getOrgs();
 
@@ -189,12 +226,15 @@ yargs(hideBin(process.argv))
                             title: account,
                             value: account,
                         }));
-                    }
+                    },
                 });
             }
 
             const res = await prompts(questions);
-            deletePassword({ title: res.title || argv.title, email: res.email || argv.email });
+            deletePassword({
+                title: res.title || argv.title,
+                email: res.email || argv.email,
+            });
         }
     )
     .command(
@@ -292,12 +332,17 @@ yargs(hideBin(process.argv))
 
             const res = await prompts(questions);
 
-            if (!await isOrgExists(res.title || argv.title)) {
+            if (!(await isOrgExists(res.title || argv.title))) {
                 console.log(chalk.redBright("Organisation not found!"));
                 return;
             }
 
-            if(!await isAccountExists(res.title || argv.title, res.email || argv.email)) {
+            if (
+                !(await isAccountExists(
+                    res.title || argv.title,
+                    res.email || argv.email
+                ))
+            ) {
                 console.log(chalk.redBright("Account not found!"));
                 return;
             }
@@ -307,7 +352,7 @@ yargs(hideBin(process.argv))
                 name: "password",
                 message: "Enter the new password",
             });
-            
+
             updatePassword({
                 title: res.title || argv.title,
                 email: res.email || argv.email,
@@ -355,6 +400,76 @@ yargs(hideBin(process.argv))
             }
         }
     )
+    .command(
+        "fav [title]",
+        "Toggle favourite status of an organisation i.e. if it is a favourite then it will be removed from favourites and vice versa",
+        (yargs) => {
+            yargs.positional("title", {
+                type: "string",
+                describe: "The title of the organisation/website",
+            });
+        },
+        async (argv) => {
+            const db = await readDb();
+            const questions = [];
+            if (!argv.title) {
+                questions.push({
+                    type: "autocomplete",
+                    name: "title",
+                    message: "Choose the organisation",
+                    choices: db.orgs.map((org) => {
+                        return {
+                            title: `${org.title} ( isFavourite?: ${chalk.yellow(
+                                org.favourite
+                            )} )`,
+                            value: org.title,
+                        };
+                    }),
+                });
+            }
+
+            const res = await prompts(questions);
+            markFavourite(res.title || argv.title);
+        }
+    )
+    .command(
+        "archive [title]",
+        "Toggle archive status of an organisation i.e. if it is archived then it will be removed from archived and vice versa",
+        (yargs) => {
+            yargs.positional("title", {
+                type: "string",
+                describe: "The title of the organisation/website",
+            });
+        },
+        async (argv) => {
+            const db = await readDb();
+            const questions = [];
+            if (!argv.title) {
+                questions.push({
+                    type: "autocomplete",
+                    name: "title",
+                    message: "Choose the organisation",
+                    choices: db.orgs.map((org) => {
+                        return {
+                            title: `${org.title} ( isArchived?: ${chalk.yellow(
+                                org.archived
+                            )} )`,
+                            value: org.title,
+                        };
+                    }),
+                });
+            }
+
+            const res = await prompts(questions);
+            markArchived(res.title || argv.title);
+        }
+    )
+    .fail((msg, err, yargs) => {
+        if (msg) {
+            console.error(chalk.redBright(`Error: ${msg}`));
+            process.exit(1);
+        }
+    })
     .demandCommand(1)
     .strictCommands()
     .scriptName("invictus")

@@ -3,7 +3,6 @@ import open from "open";
 import { readDb } from "./src/db.js";
 import cors from "cors";
 import chalk from "chalk";
-import CryptoJS from "crypto-js";
 import dotenv from "dotenv";
 import {
     getPassword,
@@ -13,7 +12,7 @@ import {
     deletePassword,
     deleteOrg,
     markArchived,
-    markFavourite
+    markFavourite,
 } from "./src/actions.js";
 dotenv.config();
 
@@ -35,14 +34,9 @@ const organizationWithPass = async (db) => {
                         org.title,
                         account.email
                     );
-                    const encryptedPassword = CryptoJS.AES.encrypt(
-                        password,
-                        process.env.SECRET_KEY
-                    ).toString();
-
                     return {
                         ...account,
-                        password: encryptedPassword,
+                        password: password
                     };
                 })
             );
@@ -88,8 +82,7 @@ app.post("/new-org", async (req, res) => {
     const responce = await createOrg({ title, domain });
     if (responce.err) {
         return res.status(responce.code).json(responce);
-    }
-    else {
+    } else {
         const dbWithPass = await organizationWithPass(responce.data);
         return res.status(201).json({
             message: responce.message,
@@ -108,8 +101,7 @@ app.post("/new-password", async (req, res) => {
     });
     if (responce.err) {
         return res.status(responce.code).json(responce);
-    }
-    else {
+    } else {
         const dbWithPass = await organizationWithPass(responce.data);
         return res.status(201).json({
             message: responce.message,
@@ -118,15 +110,12 @@ app.post("/new-password", async (req, res) => {
     }
 });
 
-
-
 app.put("/update-password", async (req, res) => {
     const { org, email, password } = req.body;
     const responce = await updatePassword({ title: org, email, password });
     if (responce.err) {
         return res.status(responce.code).json(responce);
-    }
-    else {
+    } else {
         const dbWithPass = await organizationWithPass(responce.data);
         return res.status(200).json({
             message: responce.message,
@@ -140,8 +129,7 @@ app.delete("/delete-password", async (req, res) => {
     const responce = await deletePassword({ title: org, email });
     if (responce.err) {
         return res.status(responce.code).json(responce);
-    }
-    else {
+    } else {
         const dbWithPass = await organizationWithPass(responce.data);
         return res.status(200).json({
             message: responce.message,
@@ -155,8 +143,7 @@ app.delete("/delete-org", async (req, res) => {
     const responce = await deleteOrg(title);
     if (responce.err) {
         return res.status(responce.code).json(responce);
-    }
-    else {
+    } else {
         const dbWithPass = await organizationWithPass(responce.data);
         return res.status(200).json({
             message: responce.message,
@@ -170,8 +157,7 @@ app.patch("/archive", async (req, res) => {
     const responce = await markArchived(title);
     if (responce.err) {
         return res.status(responce.code).json(responce);
-    }
-    else {
+    } else {
         const dbWithPass = await organizationWithPass(responce.data);
         return res.status(200).json({
             message: responce.message,
@@ -185,14 +171,17 @@ app.patch("/favourite", async (req, res) => {
     const responce = await markFavourite(title);
     if (responce.err) {
         return res.status(responce.code).json(responce);
-    }
-    else {
+    } else {
         const dbWithPass = await organizationWithPass(responce.data);
         return res.status(200).json({
             message: responce.message,
             data: dbWithPass,
         });
     }
+});
+
+app.get("/pratik", (req, res) => {
+    res.send("Hello Pratik suar!");
 });
 
 export const startServer = () => {
