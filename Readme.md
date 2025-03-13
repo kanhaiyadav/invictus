@@ -1,7 +1,7 @@
 # Invictus - Secure Password Manager CLI
 
 <p align="center">
-  <img src="icon.png" alt="Invictus Logo" width="200">
+  <img src="https://github.com/kanhaiyadav/invictus/blob/main/assets/icon.png?raw=true" alt="Invictus Logo" width="200">
 </p>
 
 **Invictus** is a powerful and easy-to-use CLI tool built with Node.js for securely managing passwords. It securely stores your passwords in the OS keychain using the **keytar** library and provides an intuitive web interface for managing passwords with a beautiful, responsive UI.
@@ -114,7 +114,7 @@ invictus web
 Starts the Node.js server and opens the web-based password manager.
 
 <p align="center">
-  <img src="https://github.com/kanhaiyadav/invictus/blob/main/invictus.gif?raw=true" alt="Invictus web app" width="600">
+  <img src="https://github.com/kanhaiyadav/invictus/blob/main/assets/invictus.gif?raw=true" alt="Invictus web app" width="600">
 </p>
 
 
