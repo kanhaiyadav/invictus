@@ -114,7 +114,7 @@ invictus web
 Starts the Node.js server and opens the web-based password manager.
 
 <p align="center">
-  <img src="invictus.gif" alt="Invictus web app" width="600">
+  <img src="https://github.com/kanhaiyadav/invictus/blob/main/invictus.gif?raw=true" alt="Invictus web app" width="600">
 </p>
 
 

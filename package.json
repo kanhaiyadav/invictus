@@ -24,6 +24,7 @@
     "bugs": {
         "url": "https://github.com/kanhaiyadav/invictus/issues"
     },
+    "preferGlobal": true,
     "author": "Kanhaiya Yadav",
     "license": "ISC",
     "type": "module",

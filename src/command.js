@@ -17,8 +17,6 @@ import {
     isAccountExists,
     markFavourite,
     markArchived,
-    getArchived,
-    getFavourites,
     logOrgs,
 } from "./actions.js";
 import {
@@ -31,6 +29,11 @@ import { readDb } from "./db.js";
 // Get the absolute path of the current script
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const handleCancel = () => {
+    console.log(chalk.redBright("Operation Aborted!"));
+    process.exit(0);
+};
 
 yargs(hideBin(process.argv))
     .command(
@@ -77,15 +80,20 @@ yargs(hideBin(process.argv))
             if (!argv.title) {
                 const orgs = await getOrgs();
 
-                const org = await prompts({
-                    type: "autocomplete",
-                    name: "title",
-                    message: "Choose the organisation",
-                    choices: orgs.map((org) => ({
-                        title: org,
-                        value: org,
-                    })),
-                });
+                const org = await prompts(
+                    {
+                        type: "autocomplete",
+                        name: "title",
+                        message: "Choose the organisation",
+                        choices: orgs.map((org) => ({
+                            title: org,
+                            value: org,
+                        })),
+                    },
+                    {
+                        onCancel: handleCancel,
+                    }
+                );
 
                 logPasswords(org.title);
             } else {
@@ -115,7 +123,7 @@ yargs(hideBin(process.argv))
             const questions = [];
 
             if (!argv.title) {
-                questions.push({
+                const org = await prompts({
                     type: "autocomplete",
                     name: "title",
                     message: "What is the name of the organisation",
@@ -137,18 +145,15 @@ yargs(hideBin(process.argv))
                             }, // Allow custom value
                         ];
                     },
+                }, {
+                    onCancel: handleCancel
                 });
-            }
 
-            if (!argv.domain) {
-                if (!(await isOrgExists(argv.title))) {
+                if (!(await isOrgExists(org.title))) {
                     questions.push({
                         type: "text",
                         name: "domain",
-                        message: `What is the domain (${chalk.yellow(
-                            "optional"
-                        )})`,
-                        initial: "none",
+                        message: `What is the domain of ${chalk.yellow(org.title)}`,
                     });
                 }
             }
@@ -175,7 +180,9 @@ yargs(hideBin(process.argv))
                     initial: "none",
                 });
             }
-            const res = await prompts(questions);
+            const res = await prompts(questions, {
+                onCancel: handleCancel
+            });
 
             addPassword({
                 title: argv.title || res.title,
@@ -230,7 +237,9 @@ yargs(hideBin(process.argv))
                 });
             }
 
-            const res = await prompts(questions);
+            const res = await prompts(questions, {
+                onCancel: handleCancel,
+            });
             deletePassword({
                 title: res.title || argv.title,
                 email: res.email || argv.email,
@@ -281,7 +290,9 @@ yargs(hideBin(process.argv))
                 });
             }
 
-            const res = await prompts(questions);
+            const res = await prompts(questions, {
+                onCancel: handleCancel,
+            });
 
             copyPassword(res.title || argv.title, res.email || argv.email);
         }
@@ -330,7 +341,9 @@ yargs(hideBin(process.argv))
                 });
             }
 
-            const res = await prompts(questions);
+            const res = await prompts(questions, {
+                onCancel: handleCancel,
+            });
 
             if (!(await isOrgExists(res.title || argv.title))) {
                 console.log(chalk.redBright("Organisation not found!"));
@@ -347,11 +360,16 @@ yargs(hideBin(process.argv))
                 return;
             }
 
-            const password = await prompts({
-                type: "password",
-                name: "password",
-                message: "Enter the new password",
-            });
+            const password = await prompts(
+                {
+                    type: "password",
+                    name: "password",
+                    message: "Enter the new password",
+                },
+                {
+                    onCancel: handleCancel,
+                }
+            );
 
             updatePassword({
                 title: res.title || argv.title,
@@ -428,7 +446,9 @@ yargs(hideBin(process.argv))
                 });
             }
 
-            const res = await prompts(questions);
+            const res = await prompts(questions, {
+                onCancel: handleCancel,
+            });
             markFavourite(res.title || argv.title);
         }
     )
@@ -460,7 +480,9 @@ yargs(hideBin(process.argv))
                 });
             }
 
-            const res = await prompts(questions);
+            const res = await prompts(questions, {
+                onCancel: handleCancel,
+            });
             markArchived(res.title || argv.title);
         }
     )
