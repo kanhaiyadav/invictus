@@ -18,6 +18,7 @@ import {
     markFavourite,
     markArchived,
     logOrgs,
+    logAllPasswords,
 } from "./actions.js";
 import {
     askConfirmation,
@@ -62,6 +63,12 @@ yargs(hideBin(process.argv))
                 description: "Show only archived organisations",
                 default: false,
             });
+            yargs.options("all", {
+                alias: "A",
+                type: "boolean",
+                description: "Show all passwords",
+                default: false,
+            });
             yargs.check((argv) => {
                 if ((argv.fav || argv.archived) && !argv.orgs) {
                     throw new Error(
@@ -72,13 +79,22 @@ yargs(hideBin(process.argv))
             });
         },
         async (argv) => {
+            if (argv.all) {
+                logAllPasswords();
+                return;
+            }
+            const orgs = await getOrgs();
+            if (orgs.length === 0) {
+                console.log(chalk.yellowBright("No data found!"));
+                process.exit(0);
+            }
+            
             if (argv.orgs) {
                 await logOrgs(argv.fav, argv.archived);
                 return;
             }
 
             if (!argv.title) {
-                const orgs = await getOrgs();
 
                 const org = await prompts(
                     {
@@ -120,13 +136,19 @@ yargs(hideBin(process.argv))
         },
         async (argv) => {
             const orgs = await getOrgs();
+            if (orgs.length === 0) {
+                console.log(`${chalk.yellow("No organisations found!")}\nCreating a new one...`);
+            }
             const questions = [];
+            let title = null;
 
             if (!argv.title) {
                 const org = await prompts({
-                    type: "autocomplete",
+                    type: orgs.length === 0 ? "text" : "autocomplete",
                     name: "title",
-                    message: "What is the name of the organisation",
+                    message: orgs.length === 0
+                        ? `What is the name of the organisation`
+                        : "Choose a organisation or, type a new one",
                     choices: orgs.map((org) => ({
                         title: org,
                         value: org,
@@ -148,6 +170,8 @@ yargs(hideBin(process.argv))
                 }, {
                     onCancel: handleCancel
                 });
+
+                title = org.title;
 
                 if (!(await isOrgExists(org.title))) {
                     questions.push({
@@ -185,7 +209,7 @@ yargs(hideBin(process.argv))
             });
 
             addPassword({
-                title: argv.title || res.title,
+                title: argv.title || title,
                 domain: argv.domain || res.domain,
                 email: argv.email || res.email,
                 password: argv.password || res.password,

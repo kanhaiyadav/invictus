@@ -40,6 +40,7 @@ export const isAccountExists = async (orgTitle, account) => {
 
 export const addPassword = async (data) => {
     try {
+        console.log(data);
         const db = await readDb();
         const orgIdx = db.orgs.findIndex(
             (item) => item.title === data.title || item.domain === data.domain
@@ -95,6 +96,7 @@ export const addPassword = async (data) => {
             };
         }
     } catch (error) {
+        console.log(error);
         showError();
         return {
             err: true,
@@ -110,21 +112,35 @@ export const logPasswords = async (orgTitle) => {
         if (orgTitle) {
             const org = db.orgs.find((item) => item.title === orgTitle);
             if (!org) {
-                console.error("Organization not found!!!");
-                return;
+                console.error(chalk.redBright("Organization not found!!!"));
+                process.exit(1);
             }
 
             console.table(org.accounts, ["email", "description", "createdAt"]);
         } else {
-            db.orgs.forEach((org) => {
-                console.log(`\n\n ${org.title} (${org.domain})`);
-                console.table(org.accounts, ["email", "description", "createdAt"]);
-            });
+            console.error(chalk.redBright("Organization not found!!!"));
+            process.exit(1);
         }
     } catch (error) {
         showError();
     }
 };
+
+export const logAllPasswords = async () => {
+    try {
+        const db = await readDb();
+        if (db.orgs.length === 0) {
+            console.log(chalk.yellow("No data exist!!!"));
+            return;
+        }
+        db.orgs.forEach((org) => {
+            console.log(chalk.cyanBright(`\nOrganization: ${org.title}`));
+            console.table(org.accounts, ["email", "description", "createdAt"]);
+        });
+    } catch (error) {
+        showError();
+    }
+}
 
 export const deletePassword = async (data) => {
     try {
@@ -262,6 +278,9 @@ export const copyPassword = async (service, account) => {
 export const getOrgs = async () => {
     try {
         const db = await readDb();
+        if (db.orgs.length === 0) {
+            return [];
+        }
         return db.orgs.map((org) => {
             return org.title;
         });
