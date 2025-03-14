@@ -12,10 +12,13 @@ export const showError = () => {
             "https://github.com/kanhaiyadav/invictus/issues"
         )} and wait for new version.`
     );
-}
+};
 
 export const isOrgExists = async (orgTitle) => {
     try {
+        if (!orgTitle) {
+            return false;
+        }
         const db = await readDb();
         return db.orgs.some((org) => org.title === orgTitle.toLowerCase());
     } catch (error) {
@@ -26,6 +29,9 @@ export const isOrgExists = async (orgTitle) => {
 
 export const isAccountExists = async (orgTitle, account) => {
     try {
+        if (!orgTitle || !account) {
+            return false;
+        }
         const db = await readDb();
         const org = db.orgs.find((item) => item.title === orgTitle);
         if (!org) {
@@ -40,7 +46,6 @@ export const isAccountExists = async (orgTitle, account) => {
 
 export const addPassword = async (data) => {
     try {
-        console.log(data);
         const db = await readDb();
         const orgIdx = db.orgs.findIndex(
             (item) => item.title === data.title || item.domain === data.domain
@@ -108,17 +113,40 @@ export const addPassword = async (data) => {
 
 export const logPasswords = async (orgTitle) => {
     try {
+        if (!orgTitle) {
+            console.error(
+                chalk.redBright(
+                    `${
+                        orgTitle || "This organisation"
+                    } doesn't exist in your database!!!`
+                )
+            );
+            process.exit(1);
+        }
+
         const db = await readDb();
         if (orgTitle) {
             const org = db.orgs.find((item) => item.title === orgTitle);
             if (!org) {
-                console.error(chalk.redBright("Organization not found!!!"));
+                console.error(
+                    chalk.redBright(
+                        `${
+                            orgTitle || "This organisation"
+                        } doesn't exist in your database!!!`
+                    )
+                );
                 process.exit(1);
             }
-
+            console.log(`${org.title}(${chalk.cyanBright.underline(org.domain)})`);
             console.table(org.accounts, ["email", "description", "createdAt"]);
         } else {
-            console.error(chalk.redBright("Organization not found!!!"));
+            console.error(
+                chalk.redBright(
+                    `${
+                        orgTitle || "This organisation"
+                    } doesn't exist in your database!!!`
+                )
+            );
             process.exit(1);
         }
     } catch (error) {
@@ -134,23 +162,26 @@ export const logAllPasswords = async () => {
             return;
         }
         db.orgs.forEach((org) => {
-            console.log(chalk.cyanBright(`\nOrganization: ${org.title}`));
+            console.log(
+                `${org.title}(${chalk.cyanBright.underline(org.domain)})`
+            );
             console.table(org.accounts, ["email", "description", "createdAt"]);
+            console.log('\n');
         });
     } catch (error) {
         showError();
     }
-}
+};
 
 export const deletePassword = async (data) => {
     try {
         const db = await readDb();
         const orgIdx = db.orgs.findIndex((item) => item.title === data.title);
         if (orgIdx === -1) {
-            console.error("Organization not found!!!");
+            console.error(`${data.title} doesn't exist in your database!!!`);
             return {
                 err: true,
-                message: "Organization not found!!!",
+                message: `${data.title} doesn't exist in your database!!!`,
                 code: 404,
             };
         }
@@ -191,10 +222,12 @@ export const updatePassword = async (data) => {
         const db = await readDb();
         const orgIdx = db.orgs.findIndex((item) => item.title === data.title);
         if (orgIdx === -1) {
-            console.log(chalk.red("Organization not found!!!"));
+            console.log(
+                chalk.red(`${data.title} doesn't exist in your database!!!`)
+            );
             return {
-                err: true,  
-                message: "Organization not found!!!",
+                err: true,
+                message: `${data.title} doesn't exist in your database!!!`,
                 code: 404,
             };
         }
@@ -231,16 +264,18 @@ export const updatePassword = async (data) => {
 
 export const copyPassword = async (service, account) => {
     try {
-        if (! await isOrgExists(service)) {
-            console.error(chalk.red("Organization not found!!!"));
+        if (!(await isOrgExists(service))) {
+            console.error(
+                chalk.red(`${service} doesn't exist in your database!!!`)
+            );
             return;
         } else {
-            if(! await isAccountExists(service, account)) {
+            if (!(await isAccountExists(service, account))) {
                 console.error(chalk.red("Account not found!!!"));
                 return;
             }
         }
-        
+
         const confirm = await askConfirmation(
             "confirm you want to copy password to clipboard?"
         );
@@ -264,7 +299,9 @@ export const copyPassword = async (service, account) => {
                 if (countdown < 0) {
                     clearInterval(interval);
                     clipboardy.write("");
-                    console.log(chalk.cyan("\nClipboard cleared for security."));
+                    console.log(
+                        chalk.cyan("\nClipboard cleared for security.")
+                    );
                 }
             }, 1000);
         } else {
@@ -282,7 +319,7 @@ export const getOrgs = async () => {
             return [];
         }
         return db.orgs.map((org) => {
-            return org.title;
+            return org;
         });
     } catch (error) {
         showError();
@@ -292,6 +329,9 @@ export const getOrgs = async () => {
 
 export const getAccounts = async (orgTitle) => {
     try {
+        if (!orgTitle) {
+            return [];
+        }
         const db = await readDb();
         const org = db.orgs.find((item) => item.title === orgTitle);
         if (!org) {
@@ -359,13 +399,37 @@ export const createOrg = async (data) => {
 
 export const deleteOrg = async (orgTitle) => {
     try {
+        if (!orgTitle) {
+            console.error(
+                chalk.red(
+                    `${
+                        orgTitle || "This organisation"
+                    } doesn't exist in your database!!!`
+                )
+            );
+            return {
+                err: true,
+                message: `${
+                    orgTitle || "This organisation"
+                } doesn't exist in your database!!!`,
+                code: 404,
+            };
+        }
         const db = await readDb();
         const orgIdx = db.orgs.findIndex((item) => item.title === orgTitle);
         if (orgIdx === -1) {
-            console.error(chalk.red("Organization not found!!!"));
+            console.error(
+                chalk.red(
+                    `${
+                        orgTitle || "This organisation"
+                    } doesn't exist in your database!!!`
+                )
+            );
             return {
                 err: true,
-                message: "Organization not found!!!",
+                message: `${
+                    orgTitle || "This organisation"
+                } doesn't exist in your database!!!`,
                 code: 404,
             };
         }
@@ -379,11 +443,11 @@ export const deleteOrg = async (orgTitle) => {
             }
         }
 
-        writeDb(db);
+        await writeDb(db);
 
         return {
             err: false,
-            message: "Organization deleted fully",
+            message: "Organization deleted successfully",
             data: db,
         };
     } catch (error) {
@@ -398,13 +462,37 @@ export const deleteOrg = async (orgTitle) => {
 
 export const markFavourite = async (orgTitle) => {
     try {
+        if (!orgTitle) {
+            console.error(
+                chalk.red(
+                    `${
+                        orgTitle || "This organisation"
+                    } doesn't exist in your database!!!`
+                )
+            );
+            return {
+                err: true,
+                message: `${
+                    orgTitle || "This organisation"
+                } doesn't exist in your database!!!`,
+                code: 404,
+            };
+        }
         const db = await readDb();
         const orgIdx = db.orgs.findIndex((item) => item.title === orgTitle);
         if (orgIdx === -1) {
-            console.error(chalk.red("Organization not found!!!"));
+            console.error(
+                chalk.red(
+                    `${
+                        orgTitle || "This organisation"
+                    } doesn't exist in your database!!!`
+                )
+            );
             return {
                 err: true,
-                message: "Organization not found!!!",
+                message: `${
+                    orgTitle || "This organisation"
+                } doesn't exist in your database!!!`,
                 code: 404,
             };
         }
@@ -414,7 +502,9 @@ export const markFavourite = async (orgTitle) => {
 
         return {
             err: false,
-            message: db.orgs[orgIdx].favourite? "Organization added to favourites": "Organization removed from favourites",
+            message: db.orgs[orgIdx].favourite
+                ? "Organization added to favourites"
+                : "Organization removed from favourites",
             data: db,
         };
     } catch (error) {
@@ -429,13 +519,38 @@ export const markFavourite = async (orgTitle) => {
 
 export const markArchived = async (orgTitle) => {
     try {
+        if (!orgTitle) {
+            console.error(
+                chalk.red(
+                    `${
+                        orgTitle || "This organisation"
+                    } doesn't exist in your database!!!`
+                )
+            );
+            return {
+                err: true,
+                message: `${
+                    orgTitle || "This organisation"
+                } doesn't exist in your database!!!`,
+                code: 404,
+            };
+        }
+
         const db = await readDb();
         const orgIdx = db.orgs.findIndex((item) => item.title === orgTitle);
         if (orgIdx === -1) {
-            console.error(chalk.red("Organization not found!!!"));
+            console.error(
+                chalk.red(
+                    `${
+                        orgTitle || "This organisation"
+                    } doesn't exist in your database!!!`
+                )
+            );
             return {
                 err: true,
-                message: "Organization not found!!!",
+                message: `${
+                    orgTitle || "This organisation"
+                } doesn't exist in your database!!!`,
                 code: 404,
             };
         }
@@ -464,10 +579,16 @@ export const logOrgs = async (isFav, isArchived) => {
     try {
         const db = await readDb();
         if (isFav) {
-            if(isArchived) {
-                const favArchivedOrgs = db.orgs.filter((org) => org.favourite && org.archived);
+            if (isArchived) {
+                const favArchivedOrgs = db.orgs.filter(
+                    (org) => org.favourite && org.archived
+                );
                 if (favArchivedOrgs.length === 0) {
-                    console.log(`\nFavourite and Archived Organizations: \n${chalk.yellow('No data exist!!!')}\n`);
+                    console.log(
+                        `\nFavourite and Archived Organizations: \n${chalk.yellow(
+                            "No data exist!!!"
+                        )}\n`
+                    );
                 } else {
                     console.log("\nFavourite and Archived Organizations:");
                     console.table(favArchivedOrgs, [
@@ -477,11 +598,14 @@ export const logOrgs = async (isFav, isArchived) => {
                         "archived",
                     ]);
                 }
-            }
-            else {
+            } else {
                 const favOrgs = db.orgs.filter((org) => org.favourite);
                 if (favOrgs.length === 0) {
-                    console.log(`\nFavourite Organizations: \n${chalk.yellow('No data exist!!!')}\n`);
+                    console.log(
+                        `\nFavourite Organizations: \n${chalk.yellow(
+                            "No data exist!!!"
+                        )}\n`
+                    );
                 } else {
                     console.log("\nFavourite Organizations:");
                     console.table(favOrgs, [
@@ -495,7 +619,11 @@ export const logOrgs = async (isFav, isArchived) => {
         } else if (isArchived) {
             const archivedOrgs = db.orgs.filter((org) => org.archived);
             if (archivedOrgs.length === 0) {
-                console.log(`\nArchived Organizations: \n${chalk.yellow('No data exist!!!')}\n`);
+                console.log(
+                    `\nArchived Organizations: \n${chalk.yellow(
+                        "No data exist!!!"
+                    )}\n`
+                );
             } else {
                 console.log("\nArchived Organizations:");
                 console.table(archivedOrgs, [
@@ -507,13 +635,22 @@ export const logOrgs = async (isFav, isArchived) => {
             }
         } else {
             if (db.orgs.length === 0) {
-                console.log(`\n\nAll Organizations: \n${chalk.yellow('No data exist!!!')}\n`);
+                console.log(
+                    `\n\nAll Organizations: \n${chalk.yellow(
+                        "No data exist!!!"
+                    )}\n`
+                );
             } else {
                 console.log("\n\nAll Organizations:");
-                console.table(db.orgs, ["title", "domain", "favourite", "archived"]);
+                console.table(db.orgs, [
+                    "title",
+                    "domain",
+                    "favourite",
+                    "archived",
+                ]);
             }
         }
     } catch (error) {
         showError();
     }
-}
+};

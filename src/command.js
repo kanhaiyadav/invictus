@@ -19,13 +19,13 @@ import {
     markArchived,
     logOrgs,
     logAllPasswords,
+    deleteOrg,
 } from "./actions.js";
 import {
     askConfirmation,
     copyToClipboard,
     generatePassword,
 } from "./utils/utils.js";
-import { readDb } from "./db.js";
 
 // Get the absolute path of the current script
 const __filename = fileURLToPath(import.meta.url);
@@ -85,25 +85,24 @@ yargs(hideBin(process.argv))
             }
             const orgs = await getOrgs();
             if (orgs.length === 0) {
-                console.log(chalk.yellowBright("No data found!"));
+                console.log(chalk.yellowBright("No organisations found!"));
                 process.exit(0);
             }
-            
+
             if (argv.orgs) {
                 await logOrgs(argv.fav, argv.archived);
                 return;
             }
 
             if (!argv.title) {
-
                 const org = await prompts(
                     {
                         type: "autocomplete",
                         name: "title",
                         message: "Choose the organisation",
                         choices: orgs.map((org) => ({
-                            title: org,
-                            value: org,
+                            title: org.title,
+                            value: org.title,
                         })),
                     },
                     {
@@ -137,39 +136,47 @@ yargs(hideBin(process.argv))
         async (argv) => {
             const orgs = await getOrgs();
             if (orgs.length === 0) {
-                console.log(`${chalk.yellow("No organisations found!")}\nCreating a new one...`);
+                console.log(
+                    `${chalk.yellow(
+                        "No organisations found!"
+                    )}\nCreating a new one...`
+                );
             }
             const questions = [];
             let title = null;
 
             if (!argv.title) {
-                const org = await prompts({
-                    type: orgs.length === 0 ? "text" : "autocomplete",
-                    name: "title",
-                    message: orgs.length === 0
-                        ? `What is the name of the organisation`
-                        : "Choose a organisation or, type a new one",
-                    choices: orgs.map((org) => ({
-                        title: org,
-                        value: org,
-                    })),
-                    suggest: (input, choices) => {
-                        if (!input) return choices; // Show all when empty
-                        return [
-                            ...choices.filter((choice) =>
-                                choice.title
-                                    .toLowerCase()
-                                    .includes(input.toLowerCase())
-                            ),
-                            {
-                                title: `${chalk.yellow("new: ")}${input}`,
-                                value: input,
-                            }, // Allow custom value
-                        ];
+                const org = await prompts(
+                    {
+                        type: orgs.length === 0 ? "text" : "autocomplete",
+                        name: "title",
+                        message:
+                            orgs.length === 0
+                                ? `What is the name of the organisation`
+                                : "Choose a organisation or, type a new one",
+                        choices: orgs.map((org) => ({
+                            title: org.title,
+                            value: org.title,
+                        })),
+                        suggest: (input, choices) => {
+                            if (!input) return choices; // Show all when empty
+                            return [
+                                ...choices.filter((choice) =>
+                                    choice.title
+                                        .toLowerCase()
+                                        .includes(input.toLowerCase())
+                                ),
+                                {
+                                    title: `${chalk.yellow("new: ")}${input}`,
+                                    value: input,
+                                }, // Allow custom value
+                            ];
+                        },
                     },
-                }, {
-                    onCancel: handleCancel
-                });
+                    {
+                        onCancel: handleCancel,
+                    }
+                );
 
                 title = org.title;
 
@@ -177,7 +184,9 @@ yargs(hideBin(process.argv))
                     questions.push({
                         type: "text",
                         name: "domain",
-                        message: `What is the domain of ${chalk.yellow(org.title)}`,
+                        message: `What is the domain of ${chalk.yellow(
+                            org.title
+                        )}`,
                     });
                 }
             }
@@ -186,7 +195,7 @@ yargs(hideBin(process.argv))
                 questions.push({
                     type: "text",
                     name: "email",
-                    message: `What is your email/username`,
+                    message: `What is the Account's email/username`,
                 });
             }
 
@@ -205,7 +214,7 @@ yargs(hideBin(process.argv))
                 });
             }
             const res = await prompts(questions, {
-                onCancel: handleCancel
+                onCancel: handleCancel,
             });
 
             addPassword({
@@ -232,41 +241,95 @@ yargs(hideBin(process.argv))
         },
         async (argv) => {
             const orgs = await getOrgs();
-            const questions = [];
-            if (!argv.title) {
-                questions.push({
-                    type: "autocomplete",
-                    name: "title",
-                    message: "Choose the organisation",
-                    choices: orgs.map((org) => ({
-                        title: org,
-                        value: org,
-                    })),
-                });
+            if (orgs.length === 0) {
+                console.log(chalk.yellowBright("There is nothing do delete!"));
+                process.exit(0);
             }
+            const data = {};
+            if (!argv.title) {
+                const res = await prompts(
+                    {
+                        type: "autocomplete",
+                        name: "title",
+                        message: "Choose the organisation",
+                        choices: orgs.map((org) => ({
+                            title: org.title,
+                            value: org.title,
+                        })),
+                    },
+                    {
+                        onCancel: handleCancel,
+                    }
+                );
+
+                data.title = res.title;
+            }
+
+            if (!(await isOrgExists(res.title || argv.title))) {
+                console.log(
+                    chalk.redBright(
+                        `${
+                            res.title || argv.title || "This organisation"
+                        } doesn't exist in your database!`
+                    )
+                );
+                process.exit(0);
+            }
+            
 
             if (!argv.email) {
-                // const accounts = await getAccounts(org.title);
-                questions.push({
-                    type: "autocomplete",
-                    name: "email",
-                    message: `Select your email/username`,
-                    choices: async (prev, values) => {
-                        const accounts = await getAccounts(prev || argv.title);
-                        return accounts.map((account) => ({
-                            title: account,
-                            value: account,
-                        }));
+                const res = await prompts(
+                    {
+                        type: "select",
+                        name: "value",
+                        message: "What do you want to delete",
+                        choices: [
+                            {
+                                title: "The whole organisation",
+                                value: "org",
+                            },
+                            {
+                                title: "A account within the organisation",
+                                value: "acc",
+                            },
+                        ],
+                        initial: 0,
                     },
-                });
-            }
+                    {
+                        onCancel: handleCancel,
+                    }
+                );
 
-            const res = await prompts(questions, {
-                onCancel: handleCancel,
-            });
+                if (res.value === "org") {
+                    await deleteOrg(data.title || argv.title);
+                    process.exit(0);
+                } else {
+                    const res = await prompts(
+                        {
+                            type: "autocomplete",
+                            name: "email",
+                            message: `Select your account's email/username`,
+                            choices: async () => {
+                                const accounts = await getAccounts(
+                                    data.title || argv.title
+                                );
+                                return accounts.map((account) => ({
+                                    title: account,
+                                    value: account,
+                                }));
+                            },
+                        },
+                        {
+                            onCancel: handleCancel,
+                        }
+                    );
+
+                    data.email = res.email;
+                }
+            }
             deletePassword({
-                title: res.title || argv.title,
-                email: res.email || argv.email,
+                title: data.title || argv.title,
+                email: data.email || argv.email,
             });
         }
     )
@@ -285,40 +348,78 @@ yargs(hideBin(process.argv))
         },
         async (argv) => {
             const orgs = await getOrgs();
-            const questions = [];
+            if (orgs.length === 0) {
+                console.log(chalk.yellowBright("No organisations found!"));
+                process.exit(0);
+            }
+
+            const data = {};
             if (!argv.title) {
-                questions.push({
-                    type: "autocomplete",
-                    name: "title",
-                    message: "Choose the organisation",
-                    choices: orgs.map((org) => ({
-                        title: org,
-                        value: org,
-                    })),
-                });
+                const res = await prompts(
+                    {
+                        type: "autocomplete",
+                        name: "title",
+                        message: "Choose the organisation",
+                        choices: orgs.map((org) => ({
+                            title: org.title,
+                            value: org.title,
+                        })),
+                    },
+                    {
+                        onCancel: handleCancel,
+                    }
+                );
+                data.title = res.title;
+            }
+
+            if (!(await isOrgExists(data.title || argv.title))) {
+                console.log(
+                    chalk.redBright(
+                        `${
+                            data.title || argv.title || "This organisation"
+                        } doesn't exist in your database!`
+                    )
+                );
+                process.exit(0);
             }
 
             if (!argv.email) {
-                // const accounts = await getAccounts(org.title);
-                questions.push({
-                    type: "autocomplete",
-                    name: "email",
-                    message: `Select your email/username`,
-                    choices: async (prev, values) => {
-                        const accounts = await getAccounts(prev || argv.title);
-                        return accounts.map((account) => ({
-                            title: account,
-                            value: account,
-                        }));
+                const res = await prompts(
+                    {
+                        type: "autocomplete",
+                        name: "email",
+                        message: `Select your account's email/username`,
+                        choices: async () => {
+                            const accounts = await getAccounts(
+                                data.title || argv.title
+                            );
+                            return accounts.map((account) => ({
+                                title: account,
+                                value: account,
+                            }));
+                        },
                     },
-                });
+                    {
+                        onCancel: handleCancel,
+                    }
+                );
+
+                data.email = res.email;
             }
 
-            const res = await prompts(questions, {
-                onCancel: handleCancel,
-            });
+            if (!(await isAccountExists(data.title || argv.title, data.email || argv.email))) {
+                console.log(
+                    chalk.redBright(
+                        `${
+                            data.email || argv.email || "This account"
+                        } doesn't exist in under ${data.title || argv.title}!`
+                    )
+                );
+                process.exit(0);
+            }
+            
 
-            copyPassword(res.title || argv.title, res.email || argv.email);
+            copyPassword(data.title || argv.title, data.email || argv.email);
         }
     )
     .command(
@@ -336,52 +437,74 @@ yargs(hideBin(process.argv))
         },
         async (argv) => {
             const orgs = await getOrgs();
-            const questions = [];
+            if (orgs.length === 0) {
+                console.log(chalk.yellowBright("No organisations found!"));
+                process.exit(0);
+            }
+
+            const data = {};
             if (!argv.title) {
-                questions.push({
-                    type: "autocomplete",
-                    name: "title",
-                    message: "Choose the organisation",
-                    choices: orgs.map((org) => ({
-                        title: org,
-                        value: org,
-                    })),
-                });
+                const res = await prompts(
+                    {
+                        type: "autocomplete",
+                        name: "title",
+                        message: "Choose the organisation",
+                        choices: orgs.map((org) => ({
+                            title: org.title,
+                            value: org.title,
+                        })),
+                    },
+                    {
+                        onCancel: handleCancel,
+                    }
+                );
+                data.title = res.title;
+            }
+
+            if (!(await isOrgExists(data.title || argv.title))) {
+                console.log(
+                    chalk.redBright(
+                        `${
+                            data.title || argv.title || "This organisation"
+                        } doesn't exist in your database!`
+                    )
+                );
+                process.exit(0);
             }
 
             if (!argv.email) {
-                // const accounts = await getAccounts(org.title);
-                questions.push({
-                    type: "autocomplete",
-                    name: "email",
-                    message: `Select your email/username`,
-                    choices: async (prev, values) => {
-                        const accounts = await getAccounts(prev || argv.title);
-                        return accounts.map((account) => ({
-                            title: account,
-                            value: account,
-                        }));
+                const res = await prompts(
+                    {
+                        type: "autocomplete",
+                        name: "email",
+                        message: `Select your account's email/username`,
+                        choices: async () => {
+                            const accounts = await getAccounts(
+                                data.title || argv.title
+                            );
+                            return accounts.map((account) => ({
+                                title: account,
+                                value: account,
+                            }));
+                        },
                     },
-                });
+                    {
+                        onCancel: handleCancel,
+                    }
+                );
+
+                data.email = res.email;
             }
 
-            const res = await prompts(questions, {
-                onCancel: handleCancel,
-            });
-
-            if (!(await isOrgExists(res.title || argv.title))) {
-                console.log(chalk.redBright("Organisation not found!"));
-                return;
-            }
-
-            if (
-                !(await isAccountExists(
-                    res.title || argv.title,
-                    res.email || argv.email
-                ))
-            ) {
-                console.log(chalk.redBright("Account not found!"));
-                return;
+            if (!(await isAccountExists(data.title || argv.title, data.email || argv.email))) {
+                console.log(
+                    chalk.redBright(
+                        `${
+                            data.email || argv.email || "This account"
+                        } doesn't exist in under ${data.title || argv.title}!`
+                    )
+                );
+                process.exit(0);
             }
 
             const password = await prompts(
@@ -395,9 +518,14 @@ yargs(hideBin(process.argv))
                 }
             );
 
+            if (!password.password) {
+                console.log(chalk.redBright("Password cannot be empty!"));
+                process.exit(0);
+            }
+
             updatePassword({
-                title: res.title || argv.title,
-                email: res.email || argv.email,
+                title: data.title || argv.title,
+                email: data.email || argv.email,
                 password: password.password,
             });
         }
@@ -452,14 +580,19 @@ yargs(hideBin(process.argv))
             });
         },
         async (argv) => {
-            const db = await readDb();
+            const orgs = await getOrgs();
+            if (orgs.length === 0) {
+                console.log(chalk.yellowBright("No organisations found!"));
+                process.exit(0);
+            }
+
             const questions = [];
             if (!argv.title) {
                 questions.push({
                     type: "autocomplete",
                     name: "title",
                     message: "Choose the organisation",
-                    choices: db.orgs.map((org) => {
+                    choices: orgs.map((org) => {
                         return {
                             title: `${org.title} ( isFavourite?: ${chalk.yellow(
                                 org.favourite
@@ -486,14 +619,19 @@ yargs(hideBin(process.argv))
             });
         },
         async (argv) => {
-            const db = await readDb();
+            const orgs = await getOrgs();
+            if (orgs.length === 0) {
+                console.log(chalk.yellowBright("No organisations found!"));
+                process.exit(0);
+            }
+
             const questions = [];
             if (!argv.title) {
                 questions.push({
                     type: "autocomplete",
                     name: "title",
                     message: "Choose the organisation",
-                    choices: db.orgs.map((org) => {
+                    choices: orgs.map((org) => {
                         return {
                             title: `${org.title} ( isArchived?: ${chalk.yellow(
                                 org.archived
