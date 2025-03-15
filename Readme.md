@@ -6,7 +6,7 @@
 
 **Invictus** is a powerful and easy-to-use CLI tool built with Node.js for securely managing passwords. It securely stores your passwords in the OS keychain using the **keytar** library and provides an intuitive web interface for managing passwords with a beautiful, responsive UI.
 
-## 🚀 Installation
+# 🚀 Installation
 
 To install **Invictus**, run the following command:
 
@@ -14,7 +14,7 @@ To install **Invictus**, run the following command:
 npm install -g invictus
 ```
 
-## 🛠 Usage
+# 🛠 Usage
 
 Once installed, you can use the `invictus` command to manage your passwords.
 
@@ -49,7 +49,7 @@ Once installed, you can use the `invictus` command to manage your passwords.
 -   [generate](#generate)
 -   [web](#web)
 
-### show
+## **show**
 
 ```sh
 invictus show [title]
@@ -90,7 +90,7 @@ invictus show [title]
 -   `--fav` or `-f` specifies whether to show favourite organisations. Cannot be used without specifying `--orgs` flag
 -   `--archived` or `-a` specifies whether to show archived, Cannot be used without specifying `--orgs` flag
 
-### add
+## add
 
 ```sh
 invictus add [title] [email] [des]
@@ -106,7 +106,7 @@ Adds a new account securely.
 | email | false    | The email or username for the account. If not specified, CLI prompts for input. |
 | des   | false    | An optional description of the account.                                         |
 
-### delete
+## delete
 
 ```sh
 invictus delete [title] [email]
@@ -121,7 +121,7 @@ Delete an account or whole organisation.
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 | email | false    | Your account's email/username. If not specified, CLI prompts for input.         |
 
-### update
+## update
 
 ```sh
 invictus update [title] [email]
@@ -136,7 +136,7 @@ Allows you to update password of an account.
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 | email | false    | Your account's email/username. If not specified, CLI prompts for input.         |
 
-### fav
+## fav
 
 ```sh
 invictus fav
@@ -151,7 +151,7 @@ l be removed from favourites and vice versa
 | ----- | -------- | ------------------------------------------------------------------------------- |
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 
-### archive
+## archive
 
 ```sh
 invictus archive
@@ -166,7 +166,7 @@ l be removed from archived and vice versa
 | ----- | -------- | ------------------------------------------------------------------------------- |
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 
-### copy
+## copy
 
 ```sh
 invictus copy [title] [email]
@@ -181,7 +181,7 @@ Copies an account's password to your clipboard.
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 | email | false    | Your account's email/username. If not specified, CLI prompts for input.         |
 
-### generate
+## generate
 
 ```sh
 invictus generate
@@ -193,7 +193,7 @@ Generates a strong password. Additional options:
 -   `--save` or `-s` → Copy the generated password to clipboard.
 -   
 
-### web
+## web
 
 ```sh
 invictus web
@@ -205,7 +205,7 @@ Starts the Node.js server and opens the web-based password manager.
   <img src="https://github.com/kanhaiyadav/invictus/blob/main/assets/invictus.gif?raw=true" alt="Invictus web app" width="600">
 </p>
 
-#### 10. Display Help or Version
+### Help or Version
 
 ```sh
 invictus --help
@@ -214,14 +214,14 @@ invictus --version
 
 Displays usage instructions or the current version of Invictus.
 
-## 🔑 Key Features
+# 🔑 Key Features
 
 -   🔐 **Secure Storage**: Uses **keytar** to securely store passwords in your OS keychain.
 -   🖥 **Web UI**: Comes with a beautifully designed web app accessible via `invictus web`.
 -   📝 **Easy Management**: Add, delete, update, or copy passwords with simple CLI commands.
 -   🛡 **Secure Generation**: Create strong passwords with the `generate` command.
 
-## 📦 Dependencies
+# 📦 Dependencies
 
 Invictus relies on the following libraries:
 
@@ -236,11 +236,11 @@ Invictus relies on the following libraries:
 -   **prompts** - Interactive CLI prompts
 -   **yargs** - Command-line argument parsing
 
-## 📜 License
+# 📜 License
 
 This project is licensed under the **MIT License**.
 
-## 📩 Reporting Issues
+# 📩 Reporting Issues
 
 For any issues, please open a ticket on GitHub:
 🔗 [GitHub Issues](https://github.com/kanhaiyadav/invictus)\
