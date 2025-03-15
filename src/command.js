@@ -26,6 +26,9 @@ import {
     copyToClipboard,
     generatePassword,
 } from "./utils/utils.js";
+import chalkAnimation from "chalk-animation";
+
+const sleep = (ms = 1000) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Get the absolute path of the current script
 const __filename = fileURLToPath(import.meta.url);
@@ -179,16 +182,15 @@ yargs(hideBin(process.argv))
                 );
 
                 title = org.title;
-
-                if (!(await isOrgExists(org.title))) {
-                    questions.push({
-                        type: "text",
-                        name: "domain",
-                        message: `What is the domain of ${chalk.yellow(
-                            org.title
-                        )}`,
-                    });
-                }
+            }
+            if (!(await isOrgExists(title || argv.title))) {
+                console.log(chalk.redBright(`${title || argv.title} doesn't exist in your database!`));
+                console.log(chalk.blueBright(`Creating a new organisation named ${title || argv.title}...`));
+                questions.push({
+                    type: "text",
+                    name: "domain",
+                    message: `What is the domain of ${chalk.yellow(title || argv.title)}`,
+                });
             }
 
             if (!argv.email) {
@@ -217,13 +219,18 @@ yargs(hideBin(process.argv))
                 onCancel: handleCancel,
             });
 
-            addPassword({
+            const rainbow = chalkAnimation.rainbow("Creating your account...");
+            await addPassword({
                 title: argv.title || title,
                 domain: argv.domain || res.domain,
                 email: argv.email || res.email,
                 password: argv.password || res.password,
                 description: argv.des || res.description,
             });
+            await sleep(1000);
+            rainbow.replace("✅ Account created successfully!");
+            await sleep(100);
+            rainbow.stop();
         }
     )
     .command(
@@ -265,17 +272,16 @@ yargs(hideBin(process.argv))
                 data.title = res.title;
             }
 
-            if (!(await isOrgExists(res.title || argv.title))) {
+            if (!(await isOrgExists(data.title || argv.title))) {
                 console.log(
                     chalk.redBright(
                         `${
-                            res.title || argv.title || "This organisation"
+                            data.title || argv.title || "This organisation"
                         } doesn't exist in your database!`
                     )
                 );
                 process.exit(0);
             }
-            
 
             if (!argv.email) {
                 const res = await prompts(
@@ -301,7 +307,14 @@ yargs(hideBin(process.argv))
                 );
 
                 if (res.value === "org") {
+                    const rainbow = chalkAnimation.rainbow(
+                        "Deleting the organisation..."
+                    );
                     await deleteOrg(data.title || argv.title);
+                    await sleep(1000);
+                    rainbow.replace("✅ Organisation deleted successfully!");
+                    await sleep(100);
+                    rainbow.stop();
                     process.exit(0);
                 } else {
                     const res = await prompts(
@@ -327,10 +340,16 @@ yargs(hideBin(process.argv))
                     data.email = res.email;
                 }
             }
+
+            const rainbow = chalkAnimation.rainbow("Deleting your account...");
             deletePassword({
                 title: data.title || argv.title,
                 email: data.email || argv.email,
             });
+            await sleep(1000);
+            rainbow.replace("✅ Account deleted successfully!");
+            await sleep(100);
+            rainbow.stop();
         }
     )
     .command(
@@ -407,7 +426,12 @@ yargs(hideBin(process.argv))
                 data.email = res.email;
             }
 
-            if (!(await isAccountExists(data.title || argv.title, data.email || argv.email))) {
+            if (
+                !(await isAccountExists(
+                    data.title || argv.title,
+                    data.email || argv.email
+                ))
+            ) {
                 console.log(
                     chalk.redBright(
                         `${
@@ -417,7 +441,6 @@ yargs(hideBin(process.argv))
                 );
                 process.exit(0);
             }
-            
 
             copyPassword(data.title || argv.title, data.email || argv.email);
         }
@@ -496,7 +519,12 @@ yargs(hideBin(process.argv))
                 data.email = res.email;
             }
 
-            if (!(await isAccountExists(data.title || argv.title, data.email || argv.email))) {
+            if (
+                !(await isAccountExists(
+                    data.title || argv.title,
+                    data.email || argv.email
+                ))
+            ) {
                 console.log(
                     chalk.redBright(
                         `${
@@ -523,15 +551,24 @@ yargs(hideBin(process.argv))
                 process.exit(0);
             }
 
+            const rainbow = chalkAnimation.rainbow("Updating your account...");
             updatePassword({
                 title: data.title || argv.title,
                 email: data.email || argv.email,
                 password: password.password,
             });
+            await sleep(1000);
+            rainbow.replace("✅ Account updated successfully!");
+            await sleep(100);
+            rainbow.stop();
         }
     )
-    .command("web", "Start the Node.js server", {}, () => {
-        console.log("Starting the server...");
+    .command("web", "Start the Node.js server", {}, async () => {
+        const rainbow = chalkAnimation.rainbow("Starting the server...");
+        await sleep(1000);
+        rainbow.replace("✨ Server started successfully!");
+        await sleep(100);
+        rainbow.stop();
         startServer();
     })
     .command(
@@ -606,7 +643,13 @@ yargs(hideBin(process.argv))
             const res = await prompts(questions, {
                 onCancel: handleCancel,
             });
-            markFavourite(res.title || argv.title);
+
+            const rainbow = chalkAnimation.rainbow("Toggling the favourite status...");
+            await markFavourite(res.title || argv.title);
+            await sleep(1000);
+            rainbow.replace("✅ Favourite status altered successfully!");
+            await sleep(100);
+            rainbow.stop();
         }
     )
     .command(
@@ -645,7 +688,15 @@ yargs(hideBin(process.argv))
             const res = await prompts(questions, {
                 onCancel: handleCancel,
             });
-            markArchived(res.title || argv.title);
+
+            const rainbow = chalkAnimation.rainbow(
+                "Toggling the archive status..."
+            );
+            await markArchived(res.title || argv.title);
+            await sleep(1000);
+            rainbow.replace("✅ Arcive status altered successfully!");
+            await sleep(100);
+            rainbow.stop();
         }
     )
     .fail((msg, err, yargs) => {
