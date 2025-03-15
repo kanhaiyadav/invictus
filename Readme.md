@@ -136,44 +136,6 @@ Allows you to update password of an account.
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 | email | false    | Your account's email/username. If not specified, CLI prompts for input.         |
 
-### copy
-
-```sh
-invictus copy [title] [email]
-```
-
-Copies an account's password to your clipboard.
-
-**Positional Arguments:**
-
-| Name  | Required | Description                                                                     |
-| ----- | -------- | ------------------------------------------------------------------------------- |
-| title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
-| email | false    | Your account's email/username. If not specified, CLI prompts for input.         |
-
-### web
-
-```sh
-invictus web
-```
-
-Starts the Node.js server and opens the web-based password manager.
-
-<p align="center">
-  <img src="https://github.com/kanhaiyadav/invictus/blob/main/assets/invictus.gif?raw=true" alt="Invictus web app" width="600">
-</p>
-
-### generate
-
-```sh
-invictus generate
-```
-
-Generates a strong password. Additional options:
-
--   `--length` or `-l` → Specify the password length (default: 16 characters).
--   `--save` or `-s` → Copy the generated password to clipboard.
-
 ### fav
 
 ```sh
@@ -203,6 +165,45 @@ l be removed from archived and vice versa
 | Name  | Required | Description                                                                     |
 | ----- | -------- | ------------------------------------------------------------------------------- |
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
+
+### copy
+
+```sh
+invictus copy [title] [email]
+```
+
+Copies an account's password to your clipboard.
+
+**Positional Arguments:**
+
+| Name  | Required | Description                                                                     |
+| ----- | -------- | ------------------------------------------------------------------------------- |
+| title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
+| email | false    | Your account's email/username. If not specified, CLI prompts for input.         |
+
+### generate
+
+```sh
+invictus generate
+```
+
+Generates a strong password. Additional options:
+
+-   `--length` or `-l` → Specify the password length (default: 16 characters).
+-   `--save` or `-s` → Copy the generated password to clipboard.
+-   
+
+### web
+
+```sh
+invictus web
+```
+
+Starts the Node.js server and opens the web-based password manager.
+
+<p align="center">
+  <img src="https://github.com/kanhaiyadav/invictus/blob/main/assets/invictus.gif?raw=true" alt="Invictus web app" width="600">
+</p>
 
 #### 10. Display Help or Version
 
