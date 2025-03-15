@@ -18,94 +18,140 @@ npm install -g invictus
 
 Once installed, you can use the `invictus` command to manage your passwords.
 
+### How to do things
+
+-   `Showing Organisation and Accounts Data (except password)`: use [show](#show) command
+-   `Getting account's password`: You cannot directly get the password printed in console, but you can get it copyied on clipboard with [copy](#copy) command.
+-   `Showing fav and archived organisations`: use [show](#show) command
+-   `Creating an account in an organisation`: use [add](#add) command
+-   `Creating an organisation`: There is no command explicitly for creating an orgnaisation, but you can create it with add command, when creating an account if the specified organisation does'nt exist it will created.
+-   `Deleting an account`: use [delete](#delete) command
+-   `Deleting whole organisation`: use [delete](#delete) command, when you specify the organisation title as positional argument or in prompt, you will be propmted whether to delete the whole organisation or a account within it.
+-   `Updating account password`: use [update](#update) command.
+-   `Updating account's other information`: No command available for this as of now.
+-   `marking an organisation as favourite`: use [fav](#fav) command
+-   `removing an organisation from favourites: use [fav](#fav) command
+-   `Archiving an organisation`: use [archive](#archive) command
+-   `Unarchiving an organisation: use [archive](#archive) command
+-   `Generating a random password`: use [generate](#generate) command
+-   `Generating a random password of custom length`: use [generate](#generate) command, and specify length as positional argument or in prompt.
+-   `Open an interactive WebApp`: use [web](#web) command
+
 ### 📜 Available Commands
 
-#### 1. Show Stored Passwords
+-   [show](#show)
+-   [add](#add)
+-   [delete](#delete)
+-   [update](#update)
+-   [fav](#fav)
+-   [archive](#archive)
+-   [copy](#copy)
+-   [generate](#generate)
+-   [web](#web)
+
+### show
 
 ```sh
 invictus show [title]
 ```
 
 **Usages**
-- can be used to list all the accounts within a specific organisation
-- Can be used to list all the organisations (not the accounts withing them)
-- Can be used to list all favourite organisations (not the accounts within them)
-- Can be used to list all archived organisations (not the accounts within them)
+
+-   Can be used to list all the organisations and accounts within them
+    ```bash
+    invictus show --all
+    ```
+-   can be used to list all the accounts within a specific organisation
+    ```bash
+    invictus show [organisation title]
+    ```
+-   Can be used to list all the organisations (not the accounts withing them)
+    ```bash
+    invictus show --orgs
+    ```
+-   Can be used to list all favourite organisations (not the accounts within them)
+    ```bash
+    invictus show --orgs --fav
+    ```
+-   Can be used to list all archived organisations (not the accounts within them)
+    ```bash
+    invictus show --orgs --archived
+    ```
 
 **Positional Arguments:**
 
-| Name  | Required |Description                                                                     |
+| Name  | Required | Description                                                                     |
 | ----- | -------- | ------------------------------------------------------------------------------- |
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 
 **Aditional Options**
-- `--orgs` or `-o` specifies whether to show only organisations not account within them. If not specified then all accounts of a choose organisation is shown.
-- `--fav` or `-f` specifies whether to show favourite organisations. Cannot be used without specifying `--orgs` flag 
-- `--archived` or `-a` specifies whether to show archived, Cannot be used without specifying `--orgs` flag
 
+-   `--orgs` or `-o` specifies whether to show only organisations not account within them. If not specified then all accounts of a choose organisation is shown.
+-   `--fav` or `-f` specifies whether to show favourite organisations. Cannot be used without specifying `--orgs` flag
+-   `--archived` or `-a` specifies whether to show archived, Cannot be used without specifying `--orgs` flag
 
-#### 2. Add a New Password
+### add
 
 ```sh
 invictus add [title] [email] [des]
 ```
 
-Adds a new password entry securely.
+Adds a new account securely.
 
 **Positional Arguments:**
 
-| Name  | Required |Description|
-| -------- | ---------- | ------------------------------------------------------------------------------- |
+| Name  | Required | Description                                                                     |
+| ----- | -------- | ------------------------------------------------------------------------------- |
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 | email | false    | The email or username for the account. If not specified, CLI prompts for input. |
 | des   | false    | An optional description of the account.                                         |
 
-#### 3. Delete a Password
+### delete
 
 ```sh
 invictus delete [title] [email]
 ```
 
-Deletes a stored password.
+Delete an account or whole organisation.
 
 **Positional Arguments:**
 
-| Name  | Required | Description |
-| ----- | -------- |------------------------------------------------------------------------------- | 
+| Name  | Required | Description                                                                     |
+| ----- | -------- | ------------------------------------------------------------------------------- |
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 | email | false    | Your account's email/username. If not specified, CLI prompts for input.         |
 
-#### 4. Update a Password
+### update
 
 ```sh
 invictus update [title] [email]
 ```
 
-Allows you to update an existing stored password.
+Allows you to update password of an account.
 
 **Positional Arguments:**
 
-| Name  | Required |Description                                                                     |
-| ----- | -------- |------------------------------------------------------------------------------- |
+| Name  | Required | Description                                                                     |
+| ----- | -------- | ------------------------------------------------------------------------------- |
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 | email | false    | Your account's email/username. If not specified, CLI prompts for input.         |
 
-#### 5. Copy a Password to Clipboard
+### copy
 
 ```sh
 invictus copy [title] [email]
 ```
 
-Copies a stored password to your clipboard for easy pasting.
+Copies an account's password to your clipboard.
 
 **Positional Arguments:**
 
-| Name  | Required |Description |
-| ----- | -------- |------------------------------------------------------------------------------- |
+| Name  | Required | Description                                                                     |
+| ----- | -------- | ------------------------------------------------------------------------------- |
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 | email | false    | Your account's email/username. If not specified, CLI prompts for input.         |
 
-#### 6. Access the Web App
+### web
 
 ```sh
 invictus web
@@ -117,8 +163,7 @@ Starts the Node.js server and opens the web-based password manager.
   <img src="https://github.com/kanhaiyadav/invictus/blob/main/assets/invictus.gif?raw=true" alt="Invictus web app" width="600">
 </p>
 
-
-#### 7. Generate a Secure Password
+### generate
 
 ```sh
 invictus generate
@@ -126,36 +171,37 @@ invictus generate
 
 Generates a strong password. Additional options:
 
-- `--length` or `-l` → Specify the password length (default: 16 characters).
-- `--save` or `-s` → Copy the generated password to clipboard.
+-   `--length` or `-l` → Specify the password length (default: 16 characters).
+-   `--save` or `-s` → Copy the generated password to clipboard.
 
-
-#### 8. Toggle favourite status of a organisation
+### fav
 
 ```sh
 invictus fav
 ```
+
 Toggle favourite status of an organisation i.e. if it is a favourite then it wil
 l be removed from favourites and vice versa
 
 **Positional Arguments**
 
-| Name  | Required | Description | 
+| Name  | Required | Description                                                                     |
 | ----- | -------- | ------------------------------------------------------------------------------- |
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 
-#### 9. Toggle archived status of a organisation
+### archive
 
 ```sh
 invictus archive
 ```
+
 Toggle archived status of an organisation i.e. if it is a archived then it wil
 l be removed from archived and vice versa
 
 **Positional Arguments**
 
-| Name  | Required | Description | 
-| ----- | -------- | ------------------------------------------------------------------------------- | 
+| Name  | Required | Description                                                                     |
+| ----- | -------- | ------------------------------------------------------------------------------- |
 | title | false    | The title of the organization/website. If not specified, CLI prompts for input. |
 
 #### 10. Display Help or Version
@@ -169,25 +215,25 @@ Displays usage instructions or the current version of Invictus.
 
 ## 🔑 Key Features
 
-- 🔐 **Secure Storage**: Uses **keytar** to securely store passwords in your OS keychain.
-- 🖥 **Web UI**: Comes with a beautifully designed web app accessible via `invictus web`.
-- 📝 **Easy Management**: Add, delete, update, or copy passwords with simple CLI commands.
-- 🛡 **Secure Generation**: Create strong passwords with the `generate` command.
+-   🔐 **Secure Storage**: Uses **keytar** to securely store passwords in your OS keychain.
+-   🖥 **Web UI**: Comes with a beautifully designed web app accessible via `invictus web`.
+-   📝 **Easy Management**: Add, delete, update, or copy passwords with simple CLI commands.
+-   🛡 **Secure Generation**: Create strong passwords with the `generate` command.
 
 ## 📦 Dependencies
 
 Invictus relies on the following libraries:
 
-- **chalk** - CLI text styling
-- **clipboardy** - Clipboard access
-- **cors** - Cross-origin support for the web app
-- **crypto-js** - Encryption for password security
-- **dotenv** - Environment variable management
-- **express** - Web server for the web app
-- **keytar** - Secure password storage in OS keychain
-- **open** - Opens the web UI in a browser
-- **prompts** - Interactive CLI prompts
-- **yargs** - Command-line argument parsing
+-   **chalk** - CLI text styling
+-   **clipboardy** - Clipboard access
+-   **cors** - Cross-origin support for the web app
+-   **crypto-js** - Encryption for password security
+-   **dotenv** - Environment variable management
+-   **express** - Web server for the web app
+-   **keytar** - Secure password storage in OS keychain
+-   **open** - Opens the web UI in a browser
+-   **prompts** - Interactive CLI prompts
+-   **yargs** - Command-line argument parsing
 
 ## 📜 License
 
@@ -202,4 +248,3 @@ Or email me at 📧 **[kanhaiyadav.me@gmail.com](mailto:kanhaiyadav.me@gmail.com
 ---
 
 Enjoy using **Invictus** and keep your passwords secure! 🔒
-
