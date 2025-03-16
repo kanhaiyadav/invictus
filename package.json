@@ -11,11 +11,14 @@
         "invictus": "./index.js"
     },
     "keywords": [
-        "cli",
         "invictus",
-        "password-generator",
+        "cli-app",
         "password-manager",
-        "password-manager-cli"
+        "password-manager-cli",
+        "password-manager-webApp",
+        "password-generator",
+        "secure-password-manager",
+        "os-key-chain"
     ],
     "repository": {
         "type": "git",
