@@ -27,6 +27,7 @@ import {
     generatePassword,
 } from "./utils/utils.js";
 import chalkAnimation from "chalk-animation";
+import { welcome } from "./utils/utils.js";
 
 const sleep = (ms = 1000) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -120,8 +121,8 @@ yargs(hideBin(process.argv))
         }
     )
     .command(
-        "add [title] [email] [des]",
-        "Add a new password",
+        "create [title] [email] [des]",
+        "Creates a new a account within an organisation, if the organisation doesn't exist then it will create a new organisation",
         (yargs) => {
             yargs.positional("title", {
                 type: "string",
@@ -138,7 +139,7 @@ yargs(hideBin(process.argv))
         },
         async (argv) => {
             const orgs = await getOrgs();
-            if (orgs.length === 0) {
+            if (orgs.length === 0 && !argv.title) {
                 console.log(
                     `${chalk.yellow(
                         "No organisations found!"
@@ -184,12 +185,24 @@ yargs(hideBin(process.argv))
                 title = org.title;
             }
             if (!(await isOrgExists(title || argv.title))) {
-                console.log(chalk.redBright(`${title || argv.title} doesn't exist in your database!`));
-                console.log(chalk.blueBright(`Creating a new organisation named ${title || argv.title}...`));
+                console.log(
+                    chalk.redBright(
+                        `${title || argv.title} doesn't exist in your database!`
+                    )
+                );
+                console.log(
+                    chalk.blueBright(
+                        `Creating a new organisation named ${
+                            title || argv.title
+                        }...`
+                    )
+                );
                 questions.push({
                     type: "text",
                     name: "domain",
-                    message: `What is the domain of ${chalk.yellow(title || argv.title)}`,
+                    message: `What is the domain of ${chalk.yellow(
+                        title || argv.title
+                    )}`,
                 });
             }
 
@@ -235,7 +248,7 @@ yargs(hideBin(process.argv))
     )
     .command(
         "delete [title] [email]",
-        "Delete a password",
+        "It can used to delete an account within an organisation or the whole organisation",
         (yargs) => {
             yargs.positional("title", {
                 type: "string",
@@ -354,7 +367,7 @@ yargs(hideBin(process.argv))
     )
     .command(
         "copy [title] [email]",
-        "Copy a password to the clipboard",
+        "Copy a password of a specific account to the clipboard",
         (yargs) => {
             yargs.positional("title", {
                 type: "string",
@@ -447,7 +460,7 @@ yargs(hideBin(process.argv))
     )
     .command(
         "update [title] [email]",
-        "Update a password",
+        "Updates the password of a specific account, it cannot update any other metadata (email/username, description) as of now",
         (yargs) => {
             yargs.positional("title", {
                 type: "string",
@@ -563,17 +576,22 @@ yargs(hideBin(process.argv))
             rainbow.stop();
         }
     )
-    .command("web", "Start the Node.js server", {}, async () => {
-        const rainbow = chalkAnimation.rainbow("Starting the server...");
-        await sleep(1000);
-        rainbow.replace("✨ Server started successfully!");
-        await sleep(100);
-        rainbow.stop();
-        startServer();
-    })
+    .command(
+        "web",
+        "Start the Node.js server and opens up the webApp version of managing password with beautiful UI.",
+        {},
+        async () => {
+            const rainbow = chalkAnimation.rainbow("Starting the server...");
+            await sleep(1000);
+            rainbow.replace("✨ Server started successfully!");
+            await sleep(100);
+            rainbow.stop();
+            startServer();
+        }
+    )
     .command(
         "generate",
-        "Generate a new password",
+        "Generate a new password of length 16 (unless specified) and copy it to the clipboard",
         (yargs) => {
             yargs.option("length", {
                 alias: "l",
@@ -644,7 +662,9 @@ yargs(hideBin(process.argv))
                 onCancel: handleCancel,
             });
 
-            const rainbow = chalkAnimation.rainbow("Toggling the favourite status...");
+            const rainbow = chalkAnimation.rainbow(
+                "Toggling the favourite status..."
+            );
             await markFavourite(res.title || argv.title);
             await sleep(1000);
             rainbow.replace("✅ Favourite status altered successfully!");
@@ -699,13 +719,26 @@ yargs(hideBin(process.argv))
             rainbow.stop();
         }
     )
+    .command(
+        "*",
+        "Default command",
+        () => {},
+        async (argv) => {
+            if (argv._.length === 0) {
+                await welcome();
+            } else {
+                console.log(chalk.redBright(`Error: no such command '${argv._[0]}'`));
+                process.exit(1);
+            }
+        }
+    )
     .fail((msg, err, yargs) => {
         if (msg) {
             console.error(chalk.redBright(`Error: ${msg}`));
             process.exit(1);
         }
     })
-    .demandCommand(1)
+    .demandCommand(0)
     .strictCommands()
     .scriptName("invictus")
     .parse();

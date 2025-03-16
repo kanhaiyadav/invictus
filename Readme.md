@@ -23,8 +23,8 @@ Once installed, you can use the `invictus` command to manage your passwords.
 -   `Showing Organisation and Accounts Data (except password)`: use [show](#show) command
 -   `Getting account's password`: You cannot directly get the password printed in console, but you can get it copyied on clipboard with [copy](#copy) command.
 -   `Showing fav and archived organisations`: use [show](#show) command
--   `Creating an account in an organisation`: use [add](#add) command
--   `Creating an organisation`: There is no command explicitly for creating an orgnaisation, but you can create it with add command, when creating an account if the specified organisation does'nt exist it will created.
+-   `Creating an account in an organisation`: use [create](#create) command
+-   `Creating an organisation`: There is no command explicitly for creating an orgnaisation, but you can create it with [create](#create) command, when creating an account if the specified organisation does'nt exist it will created.
 -   `Deleting an account`: use [delete](#delete) command
 -   `Deleting whole organisation`: use [delete](#delete) command, when you specify the organisation title as positional argument or in prompt, you will be propmted whether to delete the whole organisation or a account within it.
 -   `Updating account password`: use [update](#update) command.
@@ -40,7 +40,7 @@ Once installed, you can use the `invictus` command to manage your passwords.
 ### 📜 Available Commands
 
 -   [show](#show)
--   [add](#add)
+-   [create](#create)
 -   [delete](#delete)
 -   [update](#update)
 -   [fav](#fav)
@@ -90,13 +90,13 @@ invictus show [title]
 -   `--fav` or `-f` specifies whether to show favourite organisations. Cannot be used without specifying `--orgs` flag
 -   `--archived` or `-a` specifies whether to show archived, Cannot be used without specifying `--orgs` flag
 
-## add
+## create
 
 ```sh
-invictus add [title] [email] [des]
+invictus create [title] [email] [des]
 ```
 
-Adds a new account securely.
+Creates a new a account within an organisation, if the organisation doesn't exist then it will create a new organisation.
 
 **Positional Arguments:**
 
@@ -112,7 +112,7 @@ Adds a new account securely.
 invictus delete [title] [email]
 ```
 
-Delete an account or whole organisation.
+It can used to delete an account within an organisation or the whole organisation.
 
 **Positional Arguments:**
 
@@ -127,7 +127,7 @@ Delete an account or whole organisation.
 invictus update [title] [email]
 ```
 
-Allows you to update password of an account.
+Updates the password of a specific account, it cannot update any other metadata (email/username, description) as of now.
 
 **Positional Arguments:**
 
@@ -172,7 +172,7 @@ l be removed from archived and vice versa
 invictus copy [title] [email]
 ```
 
-Copies an account's password to your clipboard.
+Copy a password of a specific account to the clipboard.
 
 **Positional Arguments:**
 
@@ -187,8 +187,9 @@ Copies an account's password to your clipboard.
 invictus generate
 ```
 
-Generates a strong password. Additional options:
+Generate a new password of length 16 (unless specified) and copy it to the clipboard. 
 
+**Additional options**
 -   `--length` or `-l` → Specify the password length (default: 16 characters).
 -   `--save` or `-s` → Copy the generated password to clipboard.
 -   
@@ -218,7 +219,7 @@ Displays usage instructions or the current version of Invictus.
 
 -   🔐 **Secure Storage**: Uses **keytar** to securely store passwords in your OS keychain.
 -   🖥 **Web UI**: Comes with a beautifully designed web app accessible via `invictus web`.
--   📝 **Easy Management**: Add, delete, update, or copy passwords with simple CLI commands.
+-   📝 **Easy Management**: Create, delete, update accounts and password with simple CLI commands.
 -   🛡 **Secure Generation**: Create strong passwords with the `generate` command.
 
 # 📦 Dependencies

@@ -20,7 +20,7 @@ export const isOrgExists = async (orgTitle) => {
             return false;
         }
         const db = await readDb();
-        return db.orgs.some((org) => org.title === orgTitle.toLowerCase());
+        return db.orgs.some((org) => org.title.toLowerCase() === orgTitle.toLowerCase());
     } catch (error) {
         showError();
         return false;
